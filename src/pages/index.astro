@@ -6,7 +6,7 @@ const race = await getNextRaceData();
 const telemetry = race?.telemetry;
 ---
 
-<Layout>
+<Layout raceDate={race?.date}>
   {race && telemetry ? (
     <div class="flex flex-col gap-6">
       
