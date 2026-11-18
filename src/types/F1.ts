@@ -14,24 +14,21 @@ export interface OvertakeZone {
   details: string;
 }
 
-export interface CircuitSpecs {
-  length: string;
-  laps: number;
-  distance: string;
-  corners: number;
-  topSpeed: string;
-  lapRecord: {
-    time: string;
-    driver: string;
-    year: number;
-  };
+export interface LapRecord {
+  time: string;
+  driver: string;
+  year: string;
 }
 
 export interface CircuitTelemetryConfig {
   circuitId: string;
-  svgPath?: string; // Ruta al SVG en /public/circuits/ o path inline
-  specs: CircuitSpecs;
-  overtakeZones: OvertakeZone[];
+  fullName: string;
+  length: string;
+  laps: number;
+  topSpeed?: string;
+  drsZones: number;
+  lapRecord?: LapRecord;
+  svgPath?: string;
 }
 
 export interface NextRaceData {

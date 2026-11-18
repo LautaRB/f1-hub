@@ -5,7 +5,7 @@ interface Props {
   circuitId: string;
   telemetry: CircuitTelemetryConfig;
   circuitName: string;
-  topSpeed: string;
+  topSpeed?: string;
 }
 
 const { circuitId, telemetry, circuitName, topSpeed } = Astro.props;

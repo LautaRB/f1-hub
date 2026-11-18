@@ -1,5 +1,5 @@
 import type { NextRaceData, SessionSchedule } from '../types/F1';
-import { CIRCUITS_TELEMETRY, DEFAULT_TELEMETRY } from '../config/circuitData';
+import { getCircuitSpecs } from '../config/circuitData';
 import { CIRCUIT_SVG_MAP } from '../config/circuitSvgMap';
 
 const BASE_URL = 'https://api.jolpi.ca/ergast/f1';
@@ -15,24 +15,12 @@ export async function getNextRaceData(): Promise<NextRaceData | null> {
 
     const sessions: SessionSchedule[] = [];
 
-    if (race.FirstPractice) {
-      sessions.push({ name: 'Práctica 1', ...race.FirstPractice });
-    }
-    if (race.SecondPractice) {
-      sessions.push({ name: 'Práctica 2', ...race.SecondPractice });
-    }
-    if (race.ThirdPractice) {
-      sessions.push({ name: 'Práctica 3', ...race.ThirdPractice });
-    }
-    if (race.SprintQualifying) {
-      sessions.push({ name: 'Sprint Qualy', ...race.SprintQualifying });
-    }
-    if (race.Sprint) {
-      sessions.push({ name: 'Sprint', ...race.Sprint });
-    }
-    if (race.Qualifying) {
-      sessions.push({ name: 'Clasificación', ...race.Qualifying });
-    }
+    if (race.FirstPractice) sessions.push({ name: 'Práctica 1', ...race.FirstPractice });
+    if (race.SecondPractice) sessions.push({ name: 'Práctica 2', ...race.SecondPractice });
+    if (race.ThirdPractice) sessions.push({ name: 'Práctica 3', ...race.ThirdPractice });
+    if (race.SprintQualifying) sessions.push({ name: 'Sprint Qualy', ...race.SprintQualifying });
+    if (race.Sprint) sessions.push({ name: 'Sprint', ...race.Sprint });
+    if (race.Qualifying) sessions.push({ name: 'Clasificación', ...race.Qualifying });
 
     sessions.push({
       name: 'Carrera',
@@ -42,16 +30,16 @@ export async function getNextRaceData(): Promise<NextRaceData | null> {
     });
 
     const circuitId = race.Circuit.circuitId;
-    let telemetry = CIRCUITS_TELEMETRY[circuitId];
+    
+    // Busca datos técnicos del circuito en el JSON local
+    const specs = getCircuitSpecs(circuitId);
 
-    if (!telemetry) {
-      telemetry = {
-        ...DEFAULT_TELEMETRY,
-        circuitId: circuitId,
-        svgPath: CIRCUIT_SVG_MAP[circuitId] ? `/circuits/${CIRCUIT_SVG_MAP[circuitId]}` : undefined,
-      };
-    }
-
+    // 2. Arma el objeto telemetry con los datos del circuito y la ruta del SVG
+    const telemetry = {
+      ...specs,
+      circuitId: circuitId,
+      svgPath: CIRCUIT_SVG_MAP[circuitId] ? `/circuits/${CIRCUIT_SVG_MAP[circuitId]}` : undefined,
+    };
 
     return {
       season: race.season,

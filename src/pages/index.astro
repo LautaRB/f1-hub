@@ -37,30 +37,37 @@ const telemetry = race?.telemetry;
             circuitId={race.circuit.circuitId}
             telemetry={telemetry}
             circuitName={race.circuit.circuitName}
-            topSpeed={telemetry.specs.topSpeed}
+            topSpeed={telemetry.topSpeed} 
           />
 
-          <!-- 3 Cajas Inferiores de Métricas -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <!-- 4 Cajas Inferiores de Métricas (Ajustado a grid-cols-4) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
             <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
               <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
               <span class="text-xs text-slate-400 block mb-1">Longitud:</span>
-              <span class="text-2xl font-black text-white">{telemetry.specs.length}</span>
+              <span class="text-xl lg:text-2xl font-black text-white">{telemetry.length}</span>
             </div>
 
             <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
               <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
               <span class="text-xs text-slate-400 block mb-1">Vueltas:</span>
-              <span class="text-2xl font-black text-white">{telemetry.specs.laps}</span>
+              <span class="text-xl lg:text-2xl font-black text-white">{telemetry.laps}</span>
+            </div>
+
+            <!-- NUEVA CAJA: Top Speed -->
+            <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
+              <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
+              <span class="text-xs text-slate-400 block mb-1">Top Speed:</span>
+              <span class="text-xl lg:text-2xl font-black text-white">{telemetry.topSpeed || 'N/A'}</span>
             </div>
 
             <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
               <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
               <span class="text-xs text-slate-400 block mb-1">Récord de Vuelta:</span>
-              <div class="flex items-baseline gap-1.5 flex-wrap">
-                <span class="text-2xl font-black text-white">{telemetry.specs.lapRecord.time}</span>
-                <span class="text-xs text-slate-400">
-                  ({telemetry.specs.lapRecord.driver}, {telemetry.specs.lapRecord.year})
+              <div class="flex flex-col">
+                <span class="text-xl lg:text-2xl font-black text-white">{telemetry.lapRecord?.time || 'N/A'}</span>
+                <span class="text-[10px] text-slate-400 truncate">
+                  {telemetry.lapRecord ? `${telemetry.lapRecord.driver} (${telemetry.lapRecord.year})` : ''}
                 </span>
               </div>
             </div>
@@ -79,30 +86,15 @@ const telemetry = race?.telemetry;
           <!-- Zonas de DRS -->
           <div class="bg-[#0d111a] border border-slate-800/80 rounded-xl p-4">
             <h3 class="text-sm font-bold text-white mb-3">Zonas de DRS (Overtake)</h3>
-
-            <div class="space-y-4">
-              {telemetry.overtakeZones.map((zone) => (
-                <div class="space-y-1.5 text-xs border-b border-slate-800/60 last:border-none pb-3 last:pb-0">
-                  <div class="font-semibold text-slate-200 flex items-center justify-between">
-                    <span>{zone.turn}</span>
-                    <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400">
-                      {zone.severity}
-                    </span>
-                  </div>
-                  <div class="flex items-start gap-2 text-slate-400">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 mt-1 shrink-0"></span>
-                    <div>
-                      <span class="text-slate-300 font-medium">Detección:</span> {zone.detectionPoint}
-                    </div>
-                  </div>
-                  <div class="flex items-start gap-2 text-slate-400">
-                    <span class="w-2 h-2 rounded-full bg-red-500 mt-1 shrink-0"></span>
-                    <div>
-                      <span class="text-slate-300 font-medium">Activación:</span> {zone.activationPoint}
-                    </div>
-                  </div>
-                </div>
-              ))}
+            
+            <div class="flex items-center gap-4">
+              <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-lg w-16 h-16 flex flex-col items-center justify-center shrink-0">
+                <span class="text-3xl font-black text-emerald-400 leading-none">{telemetry.drsZones}</span>
+              </div>
+              <div class="text-xs text-slate-400 leading-relaxed">
+                Zonas habilitadas para activación.<br/>
+                <span class="text-emerald-500/80 font-medium mt-1 inline-block">Ver el mapa del circuito para ubicaciones exactas.</span>
+              </div>
             </div>
           </div>
 
