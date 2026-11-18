@@ -1,5 +1,6 @@
 import type { NextRaceData, SessionSchedule } from '../types/F1';
 import { CIRCUITS_TELEMETRY, DEFAULT_TELEMETRY } from '../config/circuitData';
+import { CIRCUIT_SVG_MAP } from '../config/circuitSvgMap';
 
 const BASE_URL = 'https://api.jolpi.ca/ergast/f1';
 
@@ -41,7 +42,16 @@ export async function getNextRaceData(): Promise<NextRaceData | null> {
     });
 
     const circuitId = race.Circuit.circuitId;
-    const telemetry = CIRCUITS_TELEMETRY[circuitId] ?? DEFAULT_TELEMETRY;
+    let telemetry = CIRCUITS_TELEMETRY[circuitId];
+
+    if (!telemetry) {
+      telemetry = {
+        ...DEFAULT_TELEMETRY,
+        circuitId: circuitId,
+        svgPath: CIRCUIT_SVG_MAP[circuitId] ? `/circuits/${CIRCUIT_SVG_MAP[circuitId]}` : undefined,
+      };
+    }
+
 
     return {
       season: race.season,

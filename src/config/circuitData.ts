@@ -2,7 +2,7 @@ import type { CircuitTelemetryConfig } from '../types/F1';
 
 export const CIRCUITS_TELEMETRY: Record<string, CircuitTelemetryConfig> = {
   vegas: {
-    circuitId: 'las-vegas-1',
+    circuitId: 'vegas',
     svgPath: '/circuits/las-vegas-1.svg',
     specs: {
       length: '6.201 km',
@@ -31,8 +31,8 @@ export const CIRCUITS_TELEMETRY: Record<string, CircuitTelemetryConfig> = {
       },
     ],
   },
-  lusail: {
-    circuitId: 'lusail-1',
+  losail: {
+    circuitId: 'losail',
     svgPath: '/circuits/lusail-1.svg',
     specs: {
       length: '5.419 km',
@@ -53,8 +53,8 @@ export const CIRCUITS_TELEMETRY: Record<string, CircuitTelemetryConfig> = {
       },
     ],
   },
-  yasmarina: {
-    circuitId: 'yas_marina-1',
+  yas_marina: {
+    circuitId: 'yas_marina',
     svgPath: '/circuits/yas_marina-1.svg',
     specs: {
       length: '5.281 km',
