@@ -1,0 +1,26 @@
+export const CIRCUIT_SVG_MAP: Record<string, string> = {
+  bahrain: 'bahrain-1.svg',
+  jeddah: 'jeddah-1.svg',
+  albert_park: 'melbourne-1.svg', // Australia
+  suzuka: 'suzuka-1.svg',
+  shanghai: 'shanghai-1.svg',
+  miami: 'miami-1.svg',
+  imola: 'imola-1.svg',
+  monaco: 'monaco-1.svg',
+  catalunya: 'catalunya-1.svg',
+  villeneuve: 'montreal-1.svg', // Canada
+  red_bull_ring: 'austria-1.svg',
+  silverstone: 'silverstone-1.svg',
+  hungaroring: 'hungaroring-1.svg',
+  spa_francorchamps: 'spa-francorchamps-1.svg',
+  zandvoort: 'zandvoort-1.svg',
+  monza: 'monza-1.svg',
+  baku: 'baku-1.svg',
+  marina_bay: 'marina-bay-1.svg',
+  americas: 'austin-1.svg',
+  rodriguez: 'mexico-city-1.svg',
+  interlagos: 'interlagos-1.svg',
+  vegas: 'las-vegas-1.svg',
+  losail: 'lusail-1.svg',
+  yas_marina: 'yas_marina-1.svg',
+};
