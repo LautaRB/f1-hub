@@ -1,0 +1,25 @@
+{
+  "vegas": {
+    "fullName": "Las Vegas Strip Circuit",
+    "length": "6.201 km",
+    "laps": 50,
+    "topSpeed": "350 km/h",
+    "lapRecord": {
+      "time": "1:35.490",
+      "driver": "Oscar Piastri",
+      "year": "2023"
+    },
+    "drsZones": 2
+  },
+  "losail": {
+    "fullName": "Lusail International Circuit",
+    "length": "5.419 km",
+    "laps": 57,
+    "lapRecord": {
+      "time": "1:24.319",
+      "driver": "Max Verstappen",
+      "year": "2023"
+    },
+    "drsZones": 1
+  }
+}
