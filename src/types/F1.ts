@@ -25,6 +25,13 @@ export interface TrackSegment {
   end: number;   // Porcentaje de fin (0 a 100)
 }
 
+export interface TrackTurn {
+  number: number; // Número de curva
+  pos: number;    // Posición porcentual sobre el trazado (0 a 100)
+  dx?: number;    // Desplazamiento opcional en X para despegar el badge de la línea
+  dy?: number;    // Desplazamiento opcional en Y
+}
+
 export interface TrackMapTelemetry {
   sectors?: {
     s1: TrackSegment;
@@ -32,6 +39,7 @@ export interface TrackMapTelemetry {
     s3: TrackSegment;
   };
   drsSegments?: TrackSegment[];
+  turns?: TrackTurn[];
 }
 
 export interface CircuitTelemetryConfig {

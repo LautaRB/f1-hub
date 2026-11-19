@@ -271,6 +271,15 @@
     "drsSegments": [
       { "start": 16, "end": 26 },
       { "start": 68, "end": 88 }
+    ],
+    "turns": [
+      { "number": 1, "pos": 4 },
+      { "number": 4, "pos": 14 },
+      { "number": 5, "pos": 28 },
+      { "number": 9, "pos": 42 },
+      { "number": 12, "pos": 60 },
+      { "number": 14, "pos": 88 },
+      { "number": 17, "pos": 96 }
     ]
   }
   },
