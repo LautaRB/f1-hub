@@ -261,7 +261,18 @@
       "driver": "Oscar Piastri",
       "year": "2023"
     },
-    "drsZones": 2
+    "drsZones": 2,
+    "mapTelemetry": {
+    "sectors": {
+      "s1": { "start": 0, "end": 30 },
+      "s2": { "start": 30, "end": 65 },
+      "s3": { "start": 65, "end": 100 }
+    },
+    "drsSegments": [
+      { "start": 16, "end": 26 },
+      { "start": 68, "end": 88 }
+    ]
+  }
   },
   "losail": {
     "fullName": "Lusail International Circuit",

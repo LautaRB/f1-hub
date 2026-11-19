@@ -20,6 +20,20 @@ export interface LapRecord {
   year: string;
 }
 
+export interface TrackSegment {
+  start: number; // Porcentaje de inicio (0 a 100)
+  end: number;   // Porcentaje de fin (0 a 100)
+}
+
+export interface TrackMapTelemetry {
+  sectors?: {
+    s1: TrackSegment;
+    s2: TrackSegment;
+    s3: TrackSegment;
+  };
+  drsSegments?: TrackSegment[];
+}
+
 export interface CircuitTelemetryConfig {
   circuitId: string;
   fullName: string;
@@ -29,6 +43,7 @@ export interface CircuitTelemetryConfig {
   drsZones: number;
   lapRecord?: LapRecord;
   svgPath?: string;
+  mapTelemetry?: TrackMapTelemetry;
 }
 
 export interface NextRaceData {
