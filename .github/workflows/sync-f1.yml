@@ -32,7 +32,7 @@ jobs:
         run: |
           git config user.name "F1 Hub Bot"
           git config user.email "bot@f1hub.local"
-          git add src/data/circuits.json
+          git add src/data/circuits.json public/circuits/
           if git diff --staged --quiet; then
             echo "pushed=false" >> $GITHUB_OUTPUT
           else

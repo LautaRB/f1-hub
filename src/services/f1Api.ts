@@ -1,6 +1,6 @@
 import type { NextRaceData, SessionSchedule, CircuitTelemetryConfig } from '../types/F1';
 import { getCircuitSpecs } from '../config/circuitData';
-import { CIRCUIT_SVG_MAP } from '../config/circuitSvgMap';
+import { getLatestCircuitSvg } from '../config/circuitSvgMap';
 import { getDynamicTrackMap } from './trackMapAPi';
 
 const BASE_URL = 'https://api.jolpi.ca/ergast/f1';
@@ -40,7 +40,7 @@ export async function getNextRaceData(): Promise<NextRaceData | null> {
     const telemetry: CircuitTelemetryConfig = {
       ...specs,
       circuitId,
-      svgPath: CIRCUIT_SVG_MAP[circuitId] ? `/circuits/${CIRCUIT_SVG_MAP[circuitId]}` : undefined,
+      svgPath: getLatestCircuitSvg(circuitId),
       dynamicMap: dynamicMap ?? undefined,
     };
 
