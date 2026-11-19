@@ -54,7 +54,7 @@ const telemetry = race?.telemetry;
               <span class="text-xl lg:text-2xl font-black text-white">{telemetry.laps}</span>
             </div>
 
-            <!-- NUEVA CAJA: Top Speed -->
+            <!-- Top Speed -->
             <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
               <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
               <span class="text-xs text-slate-400 block mb-1">Top Speed:</span>
@@ -111,7 +111,7 @@ const telemetry = race?.telemetry;
                   ]}
                 >
                   <span>{session.name}</span>
-                  <span class:list={['font-mono', session.isMain ? 'text-red-400' : 'text-slate-200']}>
+                  <span class:list={['font-mono text-xs whitespace-nowrap', session.isMain ? 'text-red-400' : 'text-slate-200']}>
                     {formatSessionToArgTime(session.date, session.time)}
                   </span>
                 </div>

@@ -63,24 +63,33 @@ export async function getNextRaceData(): Promise<NextRaceData | null> {
 }
 
 /**
- * Convierte fecha (YYYY-MM-DD) y hora UTC (HH:mm:ssZ) a la hora de Argentina (GMT-3)
+ * Convierte fecha (YYYY-MM-DD) y hora UTC (HH:mm:ssZ) a hora de Argentina (GMT-3)
+ * Ejemplo de salida: "Jue 19/11 · 21:30"
  */
 export function formatSessionToArgTime(dateStr: string, timeStr: string): string {
   const iso = `${dateStr}T${timeStr.endsWith('Z') ? timeStr : `${timeStr}Z`}`;
   const date = new Date(iso);
 
-  const dayFormatter = new Intl.DateTimeFormat('es-AR', {
+  const formatter = new Intl.DateTimeFormat('es-AR', {
     weekday: 'short',
-    timeZone: 'America/Argentina/Buenos_Aires',
-  });
-  const timeFormatter = new Intl.DateTimeFormat('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
     timeZone: 'America/Argentina/Buenos_Aires',
   });
 
-  const day = dayFormatter.format(date).replace('.', '');
-  const capitalizedDay = day.charAt(0).toUpperCase() + day.slice(1);
-  return `${capitalizedDay} ${timeFormatter.format(date)}`;
+  const parts = formatter.formatToParts(date);
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? '';
+
+  const rawWeekday = get('weekday').replace('.', '');
+  const weekday = rawWeekday.charAt(0).toUpperCase() + rawWeekday.slice(1);
+  const day = get('day');
+  const month = get('month');
+  const hour = get('hour');
+  const minute = get('minute');
+
+  return `${weekday} ${day}/${month} · ${hour}:${minute}`;
 }
