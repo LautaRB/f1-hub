@@ -1,0 +1,46 @@
+# .github/workflows/sync-f1.yml
+name: Sync F1 Hub Weekly
+
+on:
+  schedule:
+    # Todos los lunes a las 09:00 UTC (06:00 AM Argentina)
+    - cron: '0 9 * * 1'
+  # Permite dispararlo a mano desde la pestaña Actions de GitHub
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync-and-rebuild:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Sincronizar récords de vuelta
+        run: npx --yes tsx scripts/syncCircuits.ts
+
+      - name: Commit y push si hubo nuevo récord
+        id: git_push
+        run: |
+          git config user.name "F1 Hub Bot"
+          git config user.email "bot@f1hub.local"
+          git add src/data/circuits.json
+          if git diff --staged --quiet; then
+            echo "pushed=false" >> $GITHUB_OUTPUT
+          else
+            git commit -m "chore(data): actualizar récord de circuito"
+            git push
+            echo "pushed=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Disparar rebuild en Netlify (si no hubo push)
+        if: steps.git_push.outputs.pushed == 'false' && secrets.NETLIFY_BUILD_HOOK != ''
+        run: curl -X POST -d '{}' "${{ secrets.NETLIFY_BUILD_HOOK }}"
