@@ -42,5 +42,12 @@ jobs:
           fi
 
       - name: Disparar rebuild en Netlify (si no hubo push)
-        if: steps.git_push.outputs.pushed == 'false' && secrets.NETLIFY_BUILD_HOOK != ''
-        run: curl -X POST -d '{}' "${{ secrets.NETLIFY_BUILD_HOOK }}"
+        if: steps.git_push.outputs.pushed == 'false'
+        env:
+          NETLIFY_BUILD_HOOK: ${{ secrets.NETLIFY_BUILD_HOOK }}
+        run: |
+          if [ -n "$NETLIFY_BUILD_HOOK" ]; then
+            curl -X POST -d '{}' "$NETLIFY_BUILD_HOOK"
+          else
+            echo "NETLIFY_BUILD_HOOK no configurado, se omite rebuild."
+          fi
