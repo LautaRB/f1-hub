@@ -1,7 +1,7 @@
 ---
 import fs from 'node:fs';
 import path from 'node:path';
-import type { CircuitTelemetryConfig, TrackSegment } from '../../types/F1';
+import type { CircuitTelemetryConfig, DynamicTrackTurn, TrackSegment } from '../../types/F1';
 
 interface Props {
   circuitId: string;
@@ -14,8 +14,18 @@ const { circuitId, telemetry, circuitName } = Astro.props;
 
 let viewBox = '0 0 500 500';
 let trackPathD: string | null = null;
+let dynamicTurns: DynamicTrackTurn[] = [];
+let mapSource: 'multiviewer' | 'local' = 'local';
 
-if (telemetry.svgPath) {
+// 1. Prioridad: Mapa dinámico de MultiViewer
+if (telemetry.dynamicMap) {
+  viewBox = telemetry.dynamicMap.viewBox;
+  trackPathD = telemetry.dynamicMap.pathD;
+  dynamicTurns = telemetry.dynamicMap.turns;
+  mapSource = 'multiviewer';
+}
+// 2. Fallback: SVG local en public/circuits/
+else if (telemetry.svgPath) {
   try {
     const cleanPath = telemetry.svgPath.replace(/^\//, '');
     const fullPath = path.join(process.cwd(), 'public', cleanPath);
@@ -28,11 +38,11 @@ if (telemetry.svgPath) {
       if (pathMatch) trackPathD = pathMatch[1];
     }
   } catch (err) {
-    console.error(`Error leyendo SVG para ${circuitId}:`, err);
+    console.error(`Error leyendo SVG local para ${circuitId}:`, err);
   }
 }
 
-// Normaliza grosores y tamaño de badges sin importar el tamaño del viewBox del SVG
+// Escala proporcional según el ancho del viewBox (funciona tanto en 500px como en 15000px de MultiViewer)
 const vbParts = viewBox.split(/[\s,]+/).map(Number);
 const vbWidth = vbParts[2] || 500;
 const scale = vbWidth / 500;
@@ -47,12 +57,11 @@ function getSegmentAttrs(seg: TrackSegment) {
 
 const sectors = telemetry.mapTelemetry?.sectors;
 const drsSegments = telemetry.mapTelemetry?.drsSegments ?? [];
-const turns = telemetry.mapTelemetry?.turns ?? [];
+const hasTurns = dynamicTurns.length > 0;
 ---
 
 <div
   data-circuit-map
-  data-scale={scale}
   class="bg-[#0d121d] border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between min-h-107.5 relative overflow-hidden"
 >
   <!-- Header + Botones de Filtro -->
@@ -64,13 +73,12 @@ const turns = telemetry.mapTelemetry?.turns ?? [];
       <span>TELEMETRY MAP // {circuitName}</span>
     </div>
 
-    <!-- Filtros interactivos -->
     <div class="flex flex-wrap items-center gap-2">
       <button
         type="button"
         data-toggle="drs"
         disabled={drsSegments.length === 0}
-        class="filter-btn px-2.5 py-1 rounded-lg text-[11px] font-mono border border-slate-800 bg-[#111621] text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed"
+        class="px-2.5 py-1 rounded-lg text-[11px] font-mono border border-slate-800 bg-[#111621] text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed"
       >
         Overtake
       </button>
@@ -79,7 +87,7 @@ const turns = telemetry.mapTelemetry?.turns ?? [];
         type="button"
         data-toggle="sectors"
         disabled={!sectors}
-        class="filter-btn px-2.5 py-1 rounded-lg text-[11px] font-mono border border-slate-800 bg-[#111621] text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed"
+        class="px-2.5 py-1 rounded-lg text-[11px] font-mono border border-slate-800 bg-[#111621] text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed"
       >
         Sectores
       </button>
@@ -87,10 +95,10 @@ const turns = telemetry.mapTelemetry?.turns ?? [];
       <button
         type="button"
         data-toggle="turns"
-        disabled={turns.length === 0}
-        class="filter-btn px-2.5 py-1 rounded-lg text-[11px] font-mono border border-slate-800 bg-[#111621] text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed"
+        disabled={!hasTurns}
+        class="px-2.5 py-1 rounded-lg text-[11px] font-mono border border-slate-800 bg-[#111621] text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed"
       >
-        Curvas
+        Curvas {hasTurns ? `(${dynamicTurns.length})` : ''}
       </button>
     </div>
   </div>
@@ -100,7 +108,7 @@ const turns = telemetry.mapTelemetry?.turns ?? [];
     {trackPathD ? (
       <svg
         viewBox={viewBox}
-        class="w-full max-w-130 max-h-85 overflow-visible"
+        class="w-full max-w-135 max-h-87.5 overflow-visible"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -118,7 +126,7 @@ const turns = telemetry.mapTelemetry?.turns ?? [];
         <path
           d={trackPathD}
           stroke="#1e293b"
-          stroke-width={14 * scale}
+          stroke-width={13 * scale}
           stroke-linecap="round"
           stroke-linejoin="round"
         />
@@ -128,46 +136,22 @@ const turns = telemetry.mapTelemetry?.turns ?? [];
           data-base-track
           d={trackPathD}
           stroke="#e2e8f0"
-          stroke-width={6 * scale}
+          stroke-width={5.5 * scale}
           stroke-linecap="round"
           stroke-linejoin="round"
           class="transition-colors duration-300"
         />
 
-        <!-- Capa 3: Sectores -->
+        <!-- Capa 3: Sectores (oculta por defecto) -->
         {sectors && (
           <g data-layer="sectors" class="opacity-0 transition-opacity duration-300 pointer-events-none">
-            <path
-              d={trackPathD}
-              pathLength="100"
-              stroke="#ef4444"
-              stroke-width={6.5 * scale}
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              {...getSegmentAttrs(sectors.s1)}
-            />
-            <path
-              d={trackPathD}
-              pathLength="100"
-              stroke="#38bdf8"
-              stroke-width={6.5 * scale}
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              {...getSegmentAttrs(sectors.s2)}
-            />
-            <path
-              d={trackPathD}
-              pathLength="100"
-              stroke="#fbbf24"
-              stroke-width={6.5 * scale}
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              {...getSegmentAttrs(sectors.s3)}
-            />
+            <path d={trackPathD} pathLength="100" stroke="#ef4444" stroke-width={6 * scale} stroke-linecap="round" stroke-linejoin="round" {...getSegmentAttrs(sectors.s1)} />
+            <path d={trackPathD} pathLength="100" stroke="#38bdf8" stroke-width={6 * scale} stroke-linecap="round" stroke-linejoin="round" {...getSegmentAttrs(sectors.s2)} />
+            <path d={trackPathD} pathLength="100" stroke="#fbbf24" stroke-width={6 * scale} stroke-linecap="round" stroke-linejoin="round" {...getSegmentAttrs(sectors.s3)} />
           </g>
         )}
 
-        <!-- Capa 4: Overtake / DRS -->
+        <!-- Capa 4: Overtake / DRS (oculta por defecto) -->
         {drsSegments.length > 0 && (
           <g data-layer="drs" class="opacity-0 transition-opacity duration-300 pointer-events-none">
             {drsSegments.map((zone) => (
@@ -175,7 +159,7 @@ const turns = telemetry.mapTelemetry?.turns ?? [];
                 d={trackPathD}
                 pathLength="100"
                 stroke="#22c55e"
-                stroke-width={9 * scale}
+                stroke-width={8.5 * scale}
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 filter="url(#drs-glow)"
@@ -185,12 +169,35 @@ const turns = telemetry.mapTelemetry?.turns ?? [];
           </g>
         )}
 
-        <!-- Capa 5: Curvas -->
-        <g
-          data-layer="turns"
-          data-turns={JSON.stringify(turns)}
-          class="opacity-0 transition-opacity duration-300 pointer-events-none"
-        ></g>
+        <!-- Capa 5: Curvas renderizadas directo en servidor desde MultiViewer -->
+        {hasTurns && (
+          <g data-layer="turns" class="opacity-0 transition-opacity duration-300 pointer-events-none">
+            {dynamicTurns.map((turn) => (
+              <g>
+                <circle
+                  cx={turn.x}
+                  cy={turn.y}
+                  r={10 * scale}
+                  fill="#0d121d"
+                  stroke="#94a3b8"
+                  stroke-width={1.5 * scale}
+                />
+                <text
+                  x={turn.x}
+                  y={turn.y}
+                  fill="#f8fafc"
+                  font-size={9 * scale}
+                  font-weight="700"
+                  font-family="ui-monospace, monospace"
+                  text-anchor="middle"
+                  dominant-baseline="central"
+                >
+                  {turn.label}
+                </text>
+              </g>
+            ))}
+          </g>
+        )}
       </svg>
     ) : (
       <div class="text-center text-slate-500 font-mono text-xs border border-dashed border-slate-800 rounded-xl px-6 py-10">
@@ -199,9 +206,9 @@ const turns = telemetry.mapTelemetry?.turns ?? [];
     )}
   </div>
 
-  <!-- Footer + Leyenda dinámica -->
+  <!-- Footer + Leyenda -->
   <div class="flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-slate-500 uppercase">
-    <span>CIRCUIT ID: {circuitId}</span>
+    <span>CIRCUIT ID: {circuitId} · {mapSource}</span>
 
     <div class="flex flex-wrap items-center gap-4">
       <div data-legend="sectors" class="hidden items-center gap-3 text-slate-300">
@@ -218,8 +225,6 @@ const turns = telemetry.mapTelemetry?.turns ?? [];
 </div>
 
 <script>
-  const SVG_NS = 'http://www.w3.org/2000/svg';
-
   const ACTIVE_STYLES: Record<string, string[]> = {
     drs: ['border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-400'],
     sectors: ['border-sky-500/50', 'bg-sky-500/10', 'text-sky-400'],
@@ -227,55 +232,9 @@ const turns = telemetry.mapTelemetry?.turns ?? [];
   };
 
   document.querySelectorAll<HTMLElement>('[data-circuit-map]').forEach((container) => {
-    const scale = Number(container.dataset.scale) || 1;
     const baseTrack = container.querySelector<SVGPathElement>('[data-base-track]');
-    const turnsLayer = container.querySelector<SVGGElement>('[data-layer="turns"]');
 
-    // 1. Generar badges de curvas exactamente sobre el trazado usando getPointAtLength()
-    if (baseTrack && turnsLayer) {
-      const turnsData: Array<{ number: number; pos: number; dx?: number; dy?: number }> = JSON.parse(
-        turnsLayer.dataset.turns || '[]'
-      );
-
-      if (turnsData.length > 0) {
-        const totalLength = baseTrack.getTotalLength();
-
-        turnsData.forEach((turn) => {
-          const point = baseTrack.getPointAtLength((turn.pos / 100) * totalLength);
-          const cx = point.x + (turn.dx ?? 0) * scale;
-          const cy = point.y + (turn.dy ?? 0) * scale;
-
-          const group = document.createElementNS(SVG_NS, 'g');
-
-          const circle = document.createElementNS(SVG_NS, 'circle');
-          circle.setAttribute('cx', String(cx));
-          circle.setAttribute('cy', String(cy));
-          circle.setAttribute('r', String(11 * scale));
-          circle.setAttribute('fill', '#0d121d');
-          circle.setAttribute('stroke', '#94a3b8');
-          circle.setAttribute('stroke-width', String(1.5 * scale));
-
-          const text = document.createElementNS(SVG_NS, 'text');
-          text.setAttribute('x', String(cx));
-          text.setAttribute('y', String(cy));
-          text.setAttribute('fill', '#f8fafc');
-          text.setAttribute('font-size', String(10 * scale));
-          text.setAttribute('font-weight', '700');
-          text.setAttribute('font-family', 'ui-monospace, monospace');
-          text.setAttribute('text-anchor', 'middle');
-          text.setAttribute('dominant-baseline', 'central');
-          text.textContent = String(turn.number);
-
-          group.appendChild(circle);
-          group.appendChild(text);
-          turnsLayer.appendChild(group);
-        });
-      }
-    }
-
-    // 2. Lógica de toggles para cada botón
-    const buttons = container.querySelectorAll<HTMLButtonElement>('[data-toggle]');
-    buttons.forEach((btn) => {
+    container.querySelectorAll<HTMLButtonElement>('[data-toggle]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const key = btn.dataset.toggle;
         if (!key) return;
@@ -287,20 +246,16 @@ const turns = telemetry.mapTelemetry?.turns ?? [];
         const isActive = layer.classList.toggle('opacity-100');
         layer.classList.toggle('opacity-0', !isActive);
 
-        // Actualizar estilo del botón
-        const styles = ACTIVE_STYLES[key] || [];
-        styles.forEach((cls) => btn.classList.toggle(cls, isActive));
+        (ACTIVE_STYLES[key] || []).forEach((cls) => btn.classList.toggle(cls, isActive));
         btn.classList.toggle('text-slate-400', !isActive);
         btn.classList.toggle('border-slate-800', !isActive);
         btn.classList.toggle('bg-[#111621]', !isActive);
 
-        // Mostrar u ocultar leyenda en el footer
         if (legend) {
           legend.classList.toggle('flex', isActive);
           legend.classList.toggle('hidden', !isActive);
         }
 
-        // Si se activan sectores, se atenua el trazo blanco base para que los colores resalten más
         if (key === 'sectors' && baseTrack) {
           baseTrack.setAttribute('stroke', isActive ? '#334155' : '#e2e8f0');
         }

@@ -32,6 +32,12 @@ export interface TrackTurn {
   dy?: number;    // Desplazamiento opcional en Y
 }
 
+export interface DynamicTrackTurn {
+  label: string; // Ej: "1", "14", "14A"
+  x: number;
+  y: number;
+}
+
 export interface TrackMapTelemetry {
   sectors?: {
     s1: TrackSegment;
@@ -40,6 +46,13 @@ export interface TrackMapTelemetry {
   };
   drsSegments?: TrackSegment[];
   turns?: TrackTurn[];
+}
+
+export interface DynamicTrackMap {
+  viewBox: string;
+  pathD: string;
+  turns: DynamicTrackTurn[];
+  source: 'multiviewer' | 'local';
 }
 
 export interface CircuitTelemetryConfig {
@@ -52,6 +65,7 @@ export interface CircuitTelemetryConfig {
   lapRecord?: LapRecord;
   svgPath?: string;
   mapTelemetry?: TrackMapTelemetry;
+  dynamicMap?: DynamicTrackMap;
 }
 
 export interface NextRaceData {

@@ -1,6 +1,7 @@
-import type { NextRaceData, SessionSchedule } from '../types/F1';
+import type { NextRaceData, SessionSchedule, CircuitTelemetryConfig } from '../types/F1';
 import { getCircuitSpecs } from '../config/circuitData';
 import { CIRCUIT_SVG_MAP } from '../config/circuitSvgMap';
+import { getDynamicTrackMap } from './trackMapAPi';
 
 const BASE_URL = 'https://api.jolpi.ca/ergast/f1';
 
@@ -33,12 +34,14 @@ export async function getNextRaceData(): Promise<NextRaceData | null> {
     
     // Busca datos técnicos del circuito en el JSON local
     const specs = getCircuitSpecs(circuitId);
+    const dynamicMap = await getDynamicTrackMap(race.season, race.date);
 
     // 2. Arma el objeto telemetry con los datos del circuito y la ruta del SVG
-    const telemetry = {
+    const telemetry: CircuitTelemetryConfig = {
       ...specs,
-      circuitId: circuitId,
+      circuitId,
       svgPath: CIRCUIT_SVG_MAP[circuitId] ? `/circuits/${CIRCUIT_SVG_MAP[circuitId]}` : undefined,
+      dynamicMap: dynamicMap ?? undefined,
     };
 
     return {
