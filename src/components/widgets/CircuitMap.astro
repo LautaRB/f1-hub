@@ -1,7 +1,7 @@
 ---
 import fs from 'node:fs';
 import path from 'node:path';
-import type { CircuitTelemetryConfig, DynamicTrackTurn } from '../../types/F1';
+import type { CircuitTelemetryConfig, DynamicTrackSectors, DynamicTrackTurn } from '../../types/F1';
 
 interface Props {
   circuitId: string;
@@ -15,13 +15,17 @@ const { circuitId, telemetry, circuitName } = Astro.props;
 let viewBox = '0 0 500 500';
 let trackPathD: string | null = null;
 let dynamicTurns: DynamicTrackTurn[] = [];
+let sectors: DynamicTrackSectors | undefined = undefined;
+let drsPaths: string[] = [];
 let mapSource: 'multiviewer' | 'local' = 'local';
 
-// 1. Prioridad: Mapa dinámico de MultiViewer
+// 1. Prioridad: Mapa y telemetría dinámica (MultiViewer + OpenF1)
 if (telemetry.dynamicMap) {
   viewBox = telemetry.dynamicMap.viewBox;
   trackPathD = telemetry.dynamicMap.pathD;
   dynamicTurns = telemetry.dynamicMap.turns;
+  sectors = telemetry.dynamicMap.sectors;
+  drsPaths = telemetry.dynamicMap.drsPaths ?? [];
   mapSource = 'multiviewer';
 }
 // 2. Fallback: SVG local en public/circuits/
@@ -42,19 +46,20 @@ else if (telemetry.svgPath) {
   }
 }
 
-// Escala proporcional según el ancho del viewBox (funciona tanto en 500px como en 15000px de MultiViewer)
 const vbParts = viewBox.split(/[\s,]+/).map(Number);
 const vbWidth = vbParts[2] || 500;
 const scale = vbWidth / 500;
 
 const hasTurns = dynamicTurns.length > 0;
+const hasSectors = Boolean(sectors);
+const hasDrs = drsPaths.length > 0;
 ---
 
 <div
   data-circuit-map
   class="bg-[#0d121d] border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between min-h-107.5 relative overflow-hidden"
 >
-  <!-- Header + Filtro de Curvas -->
+  <!-- Header + Filtros dinámicos -->
   <div class="flex flex-wrap items-center justify-between gap-3 z-10">
     <div class="flex items-center gap-2 text-[11px] font-mono tracking-wider text-slate-400 uppercase">
       <span class="w-2.5 h-1 rounded-full bg-cyan-400"></span>
@@ -63,8 +68,28 @@ const hasTurns = dynamicTurns.length > 0;
       <span>TELEMETRY MAP // {circuitName}</span>
     </div>
 
-    {hasTurns && (
-      <div class="flex items-center gap-2">
+    <div class="flex flex-wrap items-center gap-2">
+      {hasDrs && (
+        <button
+          type="button"
+          data-toggle="drs"
+          class="px-2.5 py-1 rounded-lg text-[11px] font-mono border border-slate-800 bg-[#111621] text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer"
+        >
+          Overtake ({drsPaths.length})
+        </button>
+      )}
+
+      {hasSectors && (
+        <button
+          type="button"
+          data-toggle="sectors"
+          class="px-2.5 py-1 rounded-lg text-[11px] font-mono border border-slate-800 bg-[#111621] text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer"
+        >
+          Sectores
+        </button>
+      )}
+
+      {hasTurns && (
         <button
           type="button"
           data-toggle="turns"
@@ -72,8 +97,8 @@ const hasTurns = dynamicTurns.length > 0;
         >
           Curvas ({dynamicTurns.length})
         </button>
-      </div>
-    )}
+      )}
+    </div>
   </div>
 
   <!-- Renderizado SVG en Capas -->
@@ -85,6 +110,16 @@ const hasTurns = dynamicTurns.length > 0;
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
+        <defs>
+          <filter id="drs-glow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation={3.5 * scale} result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
         <!-- Capa 1: Borde exterior / sombra -->
         <path
           d={trackPathD}
@@ -96,14 +131,41 @@ const hasTurns = dynamicTurns.length > 0;
 
         <!-- Capa 2: Trazado original limpio -->
         <path
+          data-base-track
           d={trackPathD}
           stroke="#e2e8f0"
           stroke-width={5.5 * scale}
           stroke-linecap="round"
           stroke-linejoin="round"
+          class="transition-colors duration-300"
         />
 
-        <!-- Capa 3: Curvas renderizadas directo en servidor desde MultiViewer -->
+        <!-- Capa 3: Sectores dinámicos desde OpenF1 -->
+        {sectors && (
+          <g data-layer="sectors" class="opacity-0 transition-opacity duration-300 pointer-events-none">
+            <path d={sectors.s1} stroke="#ef4444" stroke-width={6 * scale} stroke-linecap="round" stroke-linejoin="round" />
+            <path d={sectors.s2} stroke="#38bdf8" stroke-width={6 * scale} stroke-linecap="round" stroke-linejoin="round" />
+            <path d={sectors.s3} stroke="#fbbf24" stroke-width={6 * scale} stroke-linecap="round" stroke-linejoin="round" />
+          </g>
+        )}
+
+        <!-- Capa 4: Zonas de Overtake / DRS dinámicas desde OpenF1 -->
+        {hasDrs && (
+          <g data-layer="drs" class="opacity-0 transition-opacity duration-300 pointer-events-none">
+            {drsPaths.map((d) => (
+              <path
+                d={d}
+                stroke="#22c55e"
+                stroke-width={8.5 * scale}
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                filter="url(#drs-glow)"
+              />
+            ))}
+          </g>
+        )}
+
+        <!-- Capa 5: Curvas dinámicas desde MultiViewer -->
         {hasTurns && (
           <g data-layer="turns" class="opacity-0 transition-opacity duration-300 pointer-events-none">
             {dynamicTurns.map((turn) => (
@@ -140,30 +202,60 @@ const hasTurns = dynamicTurns.length > 0;
     )}
   </div>
 
-  <!-- Footer -->
+  <!-- Footer + Leyenda dinámica -->
   <div class="flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-slate-500 uppercase">
     <span>CIRCUIT ID: {circuitId} · {mapSource}</span>
-    {hasTurns && <span class="text-slate-600">{dynamicTurns.length} TURNS</span>}
+
+    <div class="flex flex-wrap items-center gap-4">
+      <div data-legend="sectors" class="hidden items-center gap-3 text-slate-300">
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-red-500"></span> S1</span>
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-sky-400"></span> S2</span>
+        <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-amber-400"></span> S3</span>
+      </div>
+
+      <div data-legend="drs" class="hidden items-center gap-1.5 text-emerald-400">
+        <span class="w-2.5 h-0.5 bg-emerald-400 shadow-[0_0_6px_#34d399]"></span> Overtake / DRS
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
+  const ACTIVE_STYLES: Record<string, string[]> = {
+    drs: ['border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-400'],
+    sectors: ['border-sky-500/50', 'bg-sky-500/10', 'text-sky-400'],
+    turns: ['border-slate-500', 'bg-slate-800', 'text-white'],
+  };
+
   document.querySelectorAll<HTMLElement>('[data-circuit-map]').forEach((container) => {
-    const btn = container.querySelector<HTMLButtonElement>('[data-toggle="turns"]');
-    const layer = container.querySelector<SVGGElement>('[data-layer="turns"]');
-    if (!btn || !layer) return;
+    const baseTrack = container.querySelector<SVGPathElement>('[data-base-track]');
 
-    btn.addEventListener('click', () => {
-      const isActive = layer.classList.toggle('opacity-100');
-      layer.classList.toggle('opacity-0', !isActive);
+    container.querySelectorAll<HTMLButtonElement>('[data-toggle]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const key = btn.dataset.toggle;
+        if (!key) return;
 
-      btn.classList.toggle('border-slate-500', isActive);
-      btn.classList.toggle('bg-slate-800', isActive);
-      btn.classList.toggle('text-white', isActive);
+        const layer = container.querySelector<SVGGElement>(`[data-layer="${key}"]`);
+        const legend = container.querySelector<HTMLElement>(`[data-legend="${key}"]`);
+        if (!layer) return;
 
-      btn.classList.toggle('border-slate-800', !isActive);
-      btn.classList.toggle('bg-[#111621]', !isActive);
-      btn.classList.toggle('text-slate-400', !isActive);
+        const isActive = layer.classList.toggle('opacity-100');
+        layer.classList.toggle('opacity-0', !isActive);
+
+        (ACTIVE_STYLES[key] || []).forEach((cls) => btn.classList.toggle(cls, isActive));
+        btn.classList.toggle('text-slate-400', !isActive);
+        btn.classList.toggle('border-slate-800', !isActive);
+        btn.classList.toggle('bg-[#111621]', !isActive);
+
+        if (legend) {
+          legend.classList.toggle('flex', isActive);
+          legend.classList.toggle('hidden', !isActive);
+        }
+
+        if (key === 'sectors' && baseTrack) {
+          baseTrack.setAttribute('stroke', isActive ? '#334155' : '#e2e8f0');
+        }
+      });
     });
   });
 </script>

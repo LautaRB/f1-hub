@@ -26,10 +26,18 @@ export interface DynamicTrackTurn {
   y: number;
 }
 
+export interface DynamicTrackSectors {
+  s1: string;
+  s2: string;
+  s3: string;
+}
+
 export interface DynamicTrackMap {
   viewBox: string;
   pathD: string;
   turns: DynamicTrackTurn[];
+  sectors?: DynamicTrackSectors;
+  drsPaths?: string[];
   source: 'multiviewer' | 'local';
 }
 
