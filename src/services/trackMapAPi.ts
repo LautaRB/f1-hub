@@ -31,11 +31,6 @@ interface OpenF1Location {
   y: number;
 }
 
-interface OpenF1CarData {
-  date: string;
-  drs: number;
-}
-
 interface MultiViewerCorner {
   number: number;
   letter?: string;
@@ -51,9 +46,6 @@ interface MultiViewerCircuitResponse {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/**
- * Fetch con reintento automático si OpenF1 devuelve 429 (rate limit)
- */
 async function openF1Fetch<T>(url: string, retries = 2): Promise<T | null> {
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
@@ -128,68 +120,30 @@ function extractSectors(
   return undefined;
 }
 
-function extractDrsPaths(
-  sortedLocs: Array<{ ms: number; x: number; y: number }>,
-  carData: OpenF1CarData[]
-): string[] {
-  if (carData.length === 0) return [];
-
-  const sortedCar = carData
-    .map((c) => ({ ms: new Date(c.date).getTime(), drs: c.drs }))
-    .sort((a, b) => a.ms - b.ms);
-
-  const drsPaths: string[] = [];
-  let carIdx = 0;
-  let currentZone: Array<{ x: number; y: number }> = [];
-
-  for (const pt of sortedLocs) {
-    while (
-      carIdx + 1 < sortedCar.length &&
-      Math.abs(sortedCar[carIdx + 1].ms - pt.ms) <= Math.abs(sortedCar[carIdx].ms - pt.ms)
-    ) {
-      carIdx++;
-    }
-
-    if (sortedCar[carIdx].drs >= 10) {
-      currentZone.push({ x: pt.x, y: pt.y });
-    } else if (currentZone.length > 0) {
-      if (currentZone.length >= 3) drsPaths.push(pointsToPath(currentZone));
-      currentZone = [];
-    }
-  }
-
-  if (currentZone.length >= 3) {
-    drsPaths.push(pointsToPath(currentZone));
-  }
-
-  return drsPaths;
-}
-
 /**
- * Obtiene Sectores (S1/S2/S3) de la última Qualy disponible,
- * y Zonas de Overtake/DRS únicamente si la Qualy ya pertenece a la temporada actual.
+ * Obtiene los Sectores (S1/S2/S3) reales a partir de la vuelta más rápida
+ * de la última Qualifying finalizada en el circuito.
  */
-async function getDynamicTrackTelemetry(
+async function getDynamicTrackSectors(
   circuitKey: number,
-  rotation: number,
-  season: number
-): Promise<{ sectors?: DynamicTrackSectors; drsPaths?: string[] }> {
+  rotation: number
+): Promise<DynamicTrackSectors | undefined> {
   const sessions = await openF1Fetch<OpenF1Session[]>(
     `https://api.openf1.org/v1/sessions?circuit_key=${circuitKey}&session_name=Qualifying`
   );
-  if (!sessions?.length) return {};
+  if (!sessions?.length) return undefined;
 
   const now = Date.now();
   const latestQuali = sessions
     .filter((s) => new Date(s.date_end).getTime() < now)
     .sort((a, b) => new Date(b.date_start).getTime() - new Date(a.date_start).getTime())[0];
 
-  if (!latestQuali) return {};
+  if (!latestQuali) return undefined;
 
   const laps = await openF1Fetch<OpenF1Lap[]>(
     `https://api.openf1.org/v1/laps?session_key=${latestQuali.session_key}`
   );
-  if (!laps?.length) return {};
+  if (!laps?.length) return undefined;
 
   const fastestLap = laps
     .filter(
@@ -202,7 +156,7 @@ async function getDynamicTrackTelemetry(
     )
     .sort((a, b) => a.lap_duration - b.lap_duration)[0];
 
-  if (!fastestLap) return {};
+  if (!fastestLap) return undefined;
 
   const t0 = new Date(fastestLap.date_start).getTime();
   const t1 = t0 + fastestLap.duration_sector_1 * 1000;
@@ -211,12 +165,11 @@ async function getDynamicTrackTelemetry(
 
   const startIso = new Date(t0 - 500).toISOString();
   const endIso = new Date(t3 + 500).toISOString();
-  const baseParams = `session_key=${latestQuali.session_key}&driver_number=${fastestLap.driver_number}&date>=${startIso}&date<=${endIso}`;
 
   const locations = await openF1Fetch<OpenF1Location[]>(
-    `https://api.openf1.org/v1/location?${baseParams}`
+    `https://api.openf1.org/v1/location?session_key=${latestQuali.session_key}&driver_number=${fastestLap.driver_number}&date>=${startIso}&date<=${endIso}`
   );
-  if (!locations || locations.length < 10) return {};
+  if (!locations || locations.length < 10) return undefined;
 
   const sortedLocs = locations
     .map((l) => ({
@@ -226,20 +179,7 @@ async function getDynamicTrackTelemetry(
     .filter((l) => l.ms >= t0 && l.ms <= t3)
     .sort((a, b) => a.ms - b.ms);
 
-  const sectors = extractSectors(sortedLocs, t1, t2);
-
-  let drsPaths: string[] | undefined;
-  if (latestQuali.year >= 2026) {
-    const carData = await openF1Fetch<OpenF1CarData[]>(
-      `https://api.openf1.org/v1/car_data?${baseParams}`
-    );
-    if (carData?.length) {
-      const detected = extractDrsPaths(sortedLocs, carData);
-      if (detected.length > 0) drsPaths = detected;
-    }
-  }
-
-  return { sectors, drsPaths };
+  return extractSectors(sortedLocs, t1, t2);
 }
 
 export async function getDynamicTrackMap(
@@ -308,14 +248,13 @@ export async function getDynamicTrackMap(
     };
   });
 
-  const { sectors, drsPaths } = await getDynamicTrackTelemetry(circuitKey, rotation, currentYear);
+  const sectors = await getDynamicTrackSectors(circuitKey, rotation);
 
   return {
     viewBox,
     pathD,
     turns,
     sectors,
-    drsPaths,
     source: 'multiviewer',
   };
 }

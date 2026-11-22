@@ -16,16 +16,14 @@ let viewBox = '0 0 500 500';
 let trackPathD: string | null = null;
 let dynamicTurns: DynamicTrackTurn[] = [];
 let sectors: DynamicTrackSectors | undefined = undefined;
-let drsPaths: string[] = [];
 let mapSource: 'multiviewer' | 'local' = 'local';
 
-// 1. Prioridad: Mapa y telemetría dinámica (MultiViewer + OpenF1)
+// 1. Prioridad: Mapa y sectores dinámicos (MultiViewer + OpenF1)
 if (telemetry.dynamicMap) {
   viewBox = telemetry.dynamicMap.viewBox;
   trackPathD = telemetry.dynamicMap.pathD;
   dynamicTurns = telemetry.dynamicMap.turns;
   sectors = telemetry.dynamicMap.sectors;
-  drsPaths = telemetry.dynamicMap.drsPaths ?? [];
   mapSource = 'multiviewer';
 }
 // 2. Fallback: SVG local en public/circuits/
@@ -52,7 +50,6 @@ const scale = vbWidth / 500;
 
 const hasTurns = dynamicTurns.length > 0;
 const hasSectors = Boolean(sectors);
-const hasDrs = drsPaths.length > 0;
 ---
 
 <div
@@ -69,16 +66,6 @@ const hasDrs = drsPaths.length > 0;
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
-      {hasDrs && (
-        <button
-          type="button"
-          data-toggle="drs"
-          class="px-2.5 py-1 rounded-lg text-[11px] font-mono border border-slate-800 bg-[#111621] text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer"
-        >
-          Overtake ({drsPaths.length})
-        </button>
-      )}
-
       {hasSectors && (
         <button
           type="button"
@@ -110,16 +97,6 @@ const hasDrs = drsPaths.length > 0;
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <defs>
-          <filter id="drs-glow" x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation={3.5 * scale} result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
         <!-- Capa 1: Borde exterior / sombra -->
         <path
           d={trackPathD}
@@ -149,23 +126,7 @@ const hasDrs = drsPaths.length > 0;
           </g>
         )}
 
-        <!-- Capa 4: Zonas de Overtake / DRS dinámicas desde OpenF1 -->
-        {hasDrs && (
-          <g data-layer="drs" class="opacity-0 transition-opacity duration-300 pointer-events-none">
-            {drsPaths.map((d) => (
-              <path
-                d={d}
-                stroke="#22c55e"
-                stroke-width={8.5 * scale}
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                filter="url(#drs-glow)"
-              />
-            ))}
-          </g>
-        )}
-
-        <!-- Capa 5: Curvas dinámicas desde MultiViewer -->
+        <!-- Capa 4: Curvas dinámicas desde MultiViewer -->
         {hasTurns && (
           <g data-layer="turns" class="opacity-0 transition-opacity duration-300 pointer-events-none">
             {dynamicTurns.map((turn) => (
@@ -206,23 +167,16 @@ const hasDrs = drsPaths.length > 0;
   <div class="flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-slate-500 uppercase">
     <span>CIRCUIT ID: {circuitId} · {mapSource}</span>
 
-    <div class="flex flex-wrap items-center gap-4">
-      <div data-legend="sectors" class="hidden items-center gap-3 text-slate-300">
-        <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-red-500"></span> S1</span>
-        <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-sky-400"></span> S2</span>
-        <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-amber-400"></span> S3</span>
-      </div>
-
-      <div data-legend="drs" class="hidden items-center gap-1.5 text-emerald-400">
-        <span class="w-2.5 h-0.5 bg-emerald-400 shadow-[0_0_6px_#34d399]"></span> Overtake / DRS
-      </div>
+    <div data-legend="sectors" class="hidden items-center gap-3 text-slate-300">
+      <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-red-500"></span> S1</span>
+      <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-sky-400"></span> S2</span>
+      <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-amber-400"></span> S3</span>
     </div>
   </div>
 </div>
 
 <script>
   const ACTIVE_STYLES: Record<string, string[]> = {
-    drs: ['border-emerald-500/50', 'bg-emerald-500/10', 'text-emerald-400'],
     sectors: ['border-sky-500/50', 'bg-sky-500/10', 'text-sky-400'],
     turns: ['border-slate-500', 'bg-slate-800', 'text-white'],
   };

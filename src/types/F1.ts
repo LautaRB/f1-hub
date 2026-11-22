@@ -37,7 +37,6 @@ export interface DynamicTrackMap {
   pathD: string;
   turns: DynamicTrackTurn[];
   sectors?: DynamicTrackSectors;
-  drsPaths?: string[];
   source: 'multiviewer' | 'local';
 }
 
