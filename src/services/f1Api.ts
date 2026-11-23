@@ -3,15 +3,38 @@ import { getCircuitSpecs } from '../config/circuitData';
 import { getLatestCircuitSvg } from '../config/circuitSvgMap';
 import { getDynamicTrackMap } from './trackMapAPi';
 
-const BASE_URL = 'https://api.jolpi.ca/ergast/f1';
+let cachedNextRace: { data: NextRaceData; expiresAt: number } | null = null;
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutos en memoria
+
+async function fetchJolpica(url: string, retries = 2): Promise<Response> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const res = await fetch(url, {
+      headers: {
+        'User-Agent': 'F1Hub/1.0 (Astro)',
+        'Accept': 'application/json',
+      },
+    });
+
+    if (res.ok) return res;
+
+    if ((res.status === 403 || res.status === 429) && attempt < retries) {
+      await new Promise((r) => setTimeout(r, 800 * (attempt + 1)));
+      continue;
+    }
+
+    throw new Error(`HTTP Error: ${res.status}`);
+  }
+
+  throw new Error('HTTP Error: Max retries reached');
+}
 
 export async function getNextRaceData(): Promise<NextRaceData | null> {
   try {
-    const res = await fetch(`${BASE_URL}/current/next.json`);
+    const res = await fetchJolpica('https://api.jolpi.ca/ergast/f1/current/next.json');
+    const data = await res.json();
     if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
 
-    const json = await res.json();
-    const race = json?.MRData?.RaceTable?.Races?.[0];
+    const race = data.MRData.RaceTable.Races[0];
     if (!race) return null;
 
     const sessions: SessionSchedule[] = [];
@@ -44,7 +67,7 @@ export async function getNextRaceData(): Promise<NextRaceData | null> {
       dynamicMap: dynamicMap ?? undefined,
     };
 
-    return {
+    const result: NextRaceData = {
       season: race.season,
       round: race.round,
       raceName: race.raceName,
@@ -53,15 +76,26 @@ export async function getNextRaceData(): Promise<NextRaceData | null> {
         circuitName: race.Circuit.circuitName,
         locality: race.Circuit.Location.locality,
         country: race.Circuit.Location.country,
+        coordinates: {
+          lat: Number(race.Circuit.Location.lat),
+          lon: Number(race.Circuit.Location.long),
+        },
       },
       date: race.date,
       time: race.time || '14:00:00Z',
       sessions,
       telemetry,
     };
+
+    cachedNextRace = {
+      data: result,
+      expiresAt: Date.now() + CACHE_TTL_MS,
+    };
+
+    return result;
   } catch (error) {
     console.error('Error obteniendo próxima carrera:', error);
-    return null;
+    return cachedNextRace?.data ?? null;
   }
 }
 
