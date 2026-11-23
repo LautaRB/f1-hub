@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import CircuitMap from '../components/widgets/CircuitMap.astro';
+import CircuitWeather from '../components/widgets/CircuitWeather.astro';
 import { getNextRaceData, formatSessionToArgTime } from '../services/f1Api';
 
 const race = await getNextRaceData();
@@ -83,20 +84,14 @@ const telemetry = race?.telemetry;
             <span class="text-xs font-mono text-slate-500">GMT-3 (ARG)</span>
           </div>
 
-          <!-- Zonas de DRS -->
-          <div class="bg-[#0d111a] border border-slate-800/80 rounded-xl p-4">
-            <h3 class="text-sm font-bold text-white mb-3">Zonas de DRS (Overtake)</h3>
-            
-            <div class="flex items-center gap-4">
-              <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-lg w-16 h-16 flex flex-col items-center justify-center shrink-0">
-                <span class="text-3xl font-black text-emerald-400 leading-none">{telemetry.drsZones}</span>
-              </div>
-              <div class="text-xs text-slate-400 leading-relaxed">
-                Zonas habilitadas para activación.<br/>
-                <span class="text-emerald-500/80 font-medium mt-1 inline-block">Ver el mapa del circuito para ubicaciones exactas.</span>
-              </div>
-            </div>
-          </div>
+          <!-- Clima del Circuito -->
+          {race.circuit?.coordinates && (
+            <CircuitWeather
+              lat={race.circuit.coordinates.lat}
+              lon={race.circuit.coordinates.lon}
+              locality={race.circuit.locality}
+            />
+          )}
 
           <!-- Cronograma -->
           <div>

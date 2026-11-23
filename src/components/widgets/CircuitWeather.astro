@@ -1,0 +1,144 @@
+---
+interface Props {
+  lat: number;
+  lon: number;
+  locality?: string;
+}
+
+const { lat, lon, locality } = Astro.props;
+---
+
+<div
+  data-circuit-weather
+  data-lat={lat}
+  data-lon={lon}
+  class="bg-[#111621] border border-slate-800/80 rounded-xl p-3.5 flex flex-col gap-3"
+>
+  <div class="flex items-center justify-between gap-2">
+    <span class="text-xs font-semibold text-white tracking-wide">
+      Clima en el Circuito
+    </span>
+    <span
+      data-weather-status
+      class="text-[10px] font-mono uppercase tracking-wider text-slate-400"
+    >
+      {locality ? `${locality} · ` : ''}Cargando...
+    </span>
+  </div>
+
+  <div class="flex items-center justify-between gap-4">
+    <!-- Temperatura y condición -->
+    <div class="flex items-center gap-3">
+      <div
+        data-weather-temp
+        class="min-w-13 h-11 px-2.5 rounded-lg bg-sky-500/10 border border-sky-500/25 flex items-center justify-center font-mono text-lg font-bold text-sky-400"
+      >
+        --°
+      </div>
+      <div class="flex flex-col">
+        <span data-weather-desc class="text-xs font-medium text-slate-200">
+          Consultando telemetría...
+        </span>
+        <span class="text-[11px] font-mono text-slate-500">
+          Condición actual en pista
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Métricas rápidas: Viento, Humedad y Probabilidad de lluvia -->
+  <div class="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-800/70 text-[11px] font-mono">
+    <div class="flex flex-col">
+      <span class="text-slate-500 uppercase text-[10px]">Viento</span>
+      <span data-weather-wind class="text-slate-200 font-semibold">-- km/h</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-slate-500 uppercase text-[10px]">Humedad</span>
+      <span data-weather-humidity class="text-slate-200 font-semibold">--%</span>
+    </div>
+    <div class="flex flex-col">
+      <span class="text-slate-500 uppercase text-[10px]">Lluvia hoy</span>
+      <span data-weather-rain class="text-slate-200 font-semibold">--%</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  const WMO_CODES: Record<number, string> = {
+    0: 'Despejado',
+    1: 'Mayormente despejado',
+    2: 'Parcialmente nublado',
+    3: 'Nublado',
+    45: 'Niebla',
+    48: 'Niebla con escarcha',
+    51: 'Llovizna ligera',
+    53: 'Llovizna moderada',
+    55: 'Llovizna intensa',
+    61: 'Lluvia ligera',
+    63: 'Lluvia moderada',
+    65: 'Lluvia fuerte',
+    80: 'Chaparrones ligeros',
+    81: 'Chaparrones moderados',
+    82: 'Chaparrones fuertes',
+    95: 'Tormenta eléctrica',
+    96: 'Tormenta con granizo',
+    99: 'Tormenta severa',
+  };
+
+  async function initCircuitWeather() {
+    const containers = document.querySelectorAll<HTMLElement>('[data-circuit-weather]');
+
+    for (const el of containers) {
+      const lat = el.dataset.lat;
+      const lon = el.dataset.lon;
+      if (!lat || !lon) continue;
+
+      const tempEl = el.querySelector<HTMLElement>('[data-weather-temp]');
+      const descEl = el.querySelector<HTMLElement>('[data-weather-desc]');
+      const windEl = el.querySelector<HTMLElement>('[data-weather-wind]');
+      const humEl = el.querySelector<HTMLElement>('[data-weather-humidity]');
+      const rainEl = el.querySelector<HTMLElement>('[data-weather-rain]');
+      const statusEl = el.querySelector<HTMLElement>('[data-weather-status]');
+
+      try {
+        
+        const params = new URLSearchParams({
+        latitude: lat,
+        longitude: lon,
+        current: 'temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code',
+        daily: 'precipitation_probability_max',
+        forecast_days: '1',
+        timezone: 'auto',
+        });
+
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+
+        if (!res.ok) throw new Error('Weather fetch error');
+
+        const data = await res.json();
+        const current = data.current;
+        const rainProb = data.daily?.precipitation_probability_max?.[0] ?? 0;
+        const description = WMO_CODES[current.weather_code] ?? 'Variable';
+
+        if (tempEl) tempEl.textContent = `${Math.round(current.temperature_2m)}°C`;
+        if (descEl) descEl.textContent = description;
+        if (windEl) windEl.textContent = `${Math.round(current.wind_speed_10m)} km/h`;
+        if (humEl) humEl.textContent = `${current.relative_humidity_2m}%`;
+        if (rainEl) {
+          rainEl.textContent = `${rainProb}%`;
+          if (rainProb >= 40) {
+            rainEl.classList.remove('text-slate-200');
+            rainEl.classList.add('text-amber-400');
+          }
+        }
+        if (statusEl) statusEl.textContent = 'LIVE';
+      } catch (err) {
+        console.error('[CircuitWeather]', { lat, lon, err });
+        if (descEl) descEl.textContent = 'Clima no disponible';
+        if (statusEl) statusEl.textContent = 'OFFLINE';
+      }
+    }
+  }
+
+  initCircuitWeather();
+</script>

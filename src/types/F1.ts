@@ -61,6 +61,10 @@ export interface NextRaceData {
     circuitName: string;
     locality: string;
     country: string;
+    coordinates: {
+      lat: number;
+      lon: number;
+    };
   };
   date: string;
   time: string;
