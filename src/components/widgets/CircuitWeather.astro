@@ -131,7 +131,7 @@ const { lat, lon, locality } = Astro.props;
             rainEl.classList.add('text-amber-400');
           }
         }
-        if (statusEl) statusEl.textContent = 'LIVE';
+        if (statusEl) statusEl.textContent = '🟢LIVE';
       } catch (err) {
         console.error('[CircuitWeather]', { lat, lon, err });
         if (descEl) descEl.textContent = 'Clima no disponible';
