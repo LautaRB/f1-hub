@@ -1,0 +1,222 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getAllCircuits } from '../../services/f1Api';
+
+const circuits = await getAllCircuits();
+const currentSeasonCircuits = circuits.filter((c) => c.inCurrentSeason);
+const season = currentSeasonCircuits[0]?.seasonData?.season ?? new Date().getFullYear();
+
+const totalCount = circuits.length;
+const seasonCount = currentSeasonCircuits.length;
+const historicCount = totalCount - seasonCount;
+
+function formatShortDate(dateStr: string) {
+  return new Intl.DateTimeFormat('es-AR', {
+    day: '2-digit',
+    month: 'short',
+    timeZone: 'UTC',
+  }).format(new Date(`${dateStr}T00:00:00Z`));
+}
+---
+
+<Layout title="Circuitos — F1 Hub">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <header class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+      <div class="border-l-2 border-red-500 pl-4">
+        <p class="text-xs font-mono uppercase tracking-widest text-slate-400">
+          Catálogo oficial · Temporada {season} e históricos
+        </p>
+        <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white mt-1">
+          CIRCUITOS
+        </h1>
+      </div>
+
+      <div class="flex flex-wrap gap-3 font-mono text-xs">
+        <div class="bg-[#0d111a] border border-slate-800/80 rounded-lg px-3.5 py-2">
+          <span class="text-slate-400 block">TOTAL</span>
+          <span class="text-white text-sm font-bold">{totalCount}</span>
+        </div>
+        <div class="bg-[#0d111a] border border-slate-800/80 rounded-lg px-3.5 py-2">
+          <span class="text-red-400 block">TEMP. {season}</span>
+          <span class="text-white text-sm font-bold">{seasonCount}</span>
+        </div>
+        <div class="bg-[#0d111a] border border-slate-800/80 rounded-lg px-3.5 py-2">
+          <span class="text-sky-400 block">HISTÓRICOS</span>
+          <span class="text-white text-sm font-bold">{historicCount}</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+      <div class="relative flex-1 max-w-md">
+        <input
+          id="circuit-search"
+          type="search"
+          placeholder="Buscar por circuito, ciudad, país o GP..."
+          class="w-full bg-[#0d111a] border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-400/70 transition-colors"
+        />
+      </div>
+
+      <div class="flex flex-wrap gap-2" role="group" aria-label="Filtrar circuitos">
+        <button
+          type="button"
+          data-filter="all"
+          class="filter-btn px-3.5 py-2 rounded-lg text-xs font-mono uppercase tracking-wider border border-red-500/60 bg-red-500/15 text-red-400 transition-colors"
+        >
+          Todos
+        </button>
+        <button
+          type="button"
+          data-filter="season"
+          class="filter-btn px-3.5 py-2 rounded-lg text-xs font-mono uppercase tracking-wider border border-slate-800 bg-[#0d111a] text-slate-400 hover:text-slate-200 transition-colors"
+        >
+          Temporada {season}
+        </button>
+        <button
+          type="button"
+          data-filter="sprint"
+          class="filter-btn px-3.5 py-2 rounded-lg text-xs font-mono uppercase tracking-wider border border-slate-800 bg-[#0d111a] text-slate-400 hover:text-slate-200 transition-colors"
+        >
+          Sprint
+        </button>
+        <button
+          type="button"
+          data-filter="historic"
+          class="filter-btn px-3.5 py-2 rounded-lg text-xs font-mono uppercase tracking-wider border border-slate-800 bg-[#0d111a] text-slate-400 hover:text-slate-200 transition-colors"
+        >
+          Históricos
+        </button>
+      </div>
+    </section>
+
+    <section id="circuits-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {circuits.map((circuit) => {
+        const isNext = circuit.seasonData?.status === 'next';
+
+        return (
+          <a
+            href={`/circuits/${circuit.circuitId}`}
+            class:list={[
+              'circuit-card group relative flex flex-col justify-between bg-[#0d111a] border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5',
+              isNext
+                ? 'border-red-500/60 ring-1 ring-red-500/20'
+                : 'border-slate-800/80 hover:border-slate-600',
+            ]}
+            data-season={String(circuit.inCurrentSeason)}
+            data-sprint={String(Boolean(circuit.seasonData?.hasSprint))}
+            data-search={`${circuit.circuitName} ${circuit.seasonData?.raceName ?? ''} ${circuit.locality} ${circuit.country}`.toLowerCase()}
+          >
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-3">
+                <span class="font-mono text-xs text-slate-400">
+                  {circuit.seasonData
+                    ? `R${String(circuit.seasonData.round).padStart(2, '0')} · ${formatShortDate(circuit.seasonData.date)}`
+                    : 'HISTÓRICO'}
+                </span>
+
+                <div class="flex items-center gap-1.5">
+                  {circuit.seasonData?.hasSprint && (
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-sky-400/10 text-sky-400 border border-sky-400/30">
+                      Sprint
+                    </span>
+                  )}
+                  {isNext && (
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-red-500/15 text-red-400 border border-red-500/40">
+                      Próximo
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {circuit.svgPath && (
+                <div class="h-28 my-3 flex items-center justify-center rounded-lg bg-[#090d14] border border-slate-800/60 p-3">
+                  {/* Si tus SVGs tienen trazo negro, agregá 'invert' a las clases del <img> */}
+                  <img
+                    src={circuit.svgPath}
+                    alt={`Trazado de ${circuit.circuitName}`}
+                    loading="lazy"
+                    class="max-h-full max-w-full object-contain opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-200"
+                  />
+                </div>
+              )}
+
+              <h2 class="text-lg font-bold text-white group-hover:text-red-400 transition-colors leading-snug">
+                {circuit.circuitName}
+              </h2>
+              <p class="text-sm text-slate-400 mt-1">
+                {circuit.seasonData?.raceName ?? `${circuit.locality}, ${circuit.country}`}
+              </p>
+            </div>
+
+            <div class="mt-5 pt-3.5 border-t border-slate-800/70 flex items-center justify-between gap-2 text-xs">
+              <span class="text-slate-300 truncate">
+                {circuit.locality}, {circuit.country}
+              </span>
+              <span class="font-mono text-[11px] text-sky-400/80 group-hover:translate-x-0.5 transition-transform shrink-0">
+                Ver detalle →
+              </span>
+            </div>
+          </a>
+        );
+      })}
+    </section>
+
+    <p id="circuits-empty" class="hidden text-center text-sm text-slate-500 py-8">
+      No hay circuitos que coincidan con ese filtro.
+    </p>
+  </main>
+</Layout>
+
+<script>
+  const searchInput = document.getElementById('circuit-search') as HTMLInputElement | null;
+  const filterButtons = document.querySelectorAll<HTMLButtonElement>('.filter-btn');
+  const cards = document.querySelectorAll<HTMLElement>('.circuit-card');
+  const emptyState = document.getElementById('circuits-empty');
+
+  let activeFilter = 'all';
+
+  function applyFilters() {
+    const query = (searchInput?.value ?? '').trim().toLowerCase();
+    let visibleCount = 0;
+
+    cards.forEach((card) => {
+      const inSeason = card.dataset.season === 'true';
+      const isSprint = card.dataset.sprint === 'true';
+      const haystack = card.dataset.search ?? '';
+
+      const matchesFilter =
+        activeFilter === 'all' ||
+        (activeFilter === 'season' && inSeason) ||
+        (activeFilter === 'sprint' && isSprint) ||
+        (activeFilter === 'historic' && !inSeason);
+
+      const matchesSearch = !query || haystack.includes(query);
+      const isVisible = matchesFilter && matchesSearch;
+
+      card.classList.toggle('hidden', !isVisible);
+      if (isVisible) visibleCount++;
+    });
+
+    emptyState?.classList.toggle('hidden', visibleCount > 0);
+  }
+
+  searchInput?.addEventListener('input', applyFilters);
+
+  filterButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      activeFilter = btn.dataset.filter ?? 'all';
+
+      filterButtons.forEach((b) => {
+        const isCurrent = b === btn;
+        b.classList.toggle('border-red-500/60', isCurrent);
+        b.classList.toggle('bg-red-500/15', isCurrent);
+        b.classList.toggle('text-red-400', isCurrent);
+        b.classList.toggle('border-slate-800', !isCurrent);
+        b.classList.toggle('bg-[#0d111a]', !isCurrent);
+        b.classList.toggle('text-slate-400', !isCurrent);
+      });
+
+      applyFilters();
+    });
+  });
+</script>
