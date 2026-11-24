@@ -1,0 +1,148 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import CircuitWeather from '../../components/widgets/CircuitWeather.astro';
+import { getAllCircuits, type CircuitItem } from '../../services/f1Api';
+
+export async function getStaticPaths() {
+  const circuits = await getAllCircuits();
+
+  return circuits.map((circuit) => ({
+    params: { id: circuit.circuitId },
+    props: { circuit },
+  }));
+}
+
+interface Props {
+  circuit: CircuitItem;
+}
+
+const { circuit } = Astro.props;
+
+function formatFullDate(dateStr: string) {
+  return new Intl.DateTimeFormat('es-AR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(`${dateStr}T00:00:00Z`));
+}
+---
+
+<Layout title={`${circuit.circuitName} — F1 Hub`}>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <!-- Volver + Header -->
+    <div class="space-y-4">
+      <a
+        href="/circuits/circuits"
+        class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400 hover:text-white transition-colors"
+      >
+        ← Volver a circuitos
+      </a>
+
+      <header class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div class="border-l-2 border-red-500 pl-4">
+          <div class="flex flex-wrap items-center gap-2 mb-1">
+            <span class="text-xs font-mono uppercase tracking-widest text-slate-400">
+              {circuit.seasonData
+                ? `Temporada ${circuit.seasonData.season} · Ronda ${circuit.seasonData.round}`
+                : 'Circuito Histórico de F1'}
+            </span>
+            {circuit.seasonData?.hasSprint && (
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-sky-400/10 text-sky-400 border border-sky-400/30">
+                Sprint
+              </span>
+            )}
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white">
+            {circuit.circuitName}
+          </h1>
+          <p class="text-slate-400 mt-1">
+            {circuit.locality}, {circuit.country}
+          </p>
+        </div>
+
+        <a
+          href={circuit.wikiUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="self-start md:self-auto px-4 py-2 rounded-lg text-xs font-mono uppercase tracking-wider bg-[#0d111a] border border-slate-800 text-slate-300 hover:border-sky-400/60 hover:text-sky-400 transition-colors"
+        >
+          Ficha Wikipedia ↗
+        </a>
+      </header>
+    </div>
+
+    <!-- Layout principal: Mapa + Panel lateral -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Trazado SVG -->
+      <section class="lg:col-span-2 bg-[#0d111a] border border-slate-800/80 rounded-2xl p-6 flex flex-col">
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 mb-6">
+          <div class="flex items-center gap-2">
+            <span class="w-4 h-1 rounded-full bg-sky-400"></span>
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+            <span class="font-mono text-xs tracking-widest text-slate-400 uppercase">
+              TRACK LAYOUT // {circuit.circuitId.toUpperCase()}
+            </span>
+          </div>
+          <span class="font-mono text-xs text-slate-500">
+            {circuit.coordinates.lat.toFixed(4)}°, {circuit.coordinates.lon.toFixed(4)}°
+          </span>
+        </div>
+
+        <div class="flex-1 min-h-80 flex items-center justify-center rounded-xl bg-[#090d14] border border-slate-800/60 p-8">
+          {circuit.svgPath ? (
+            <img
+              src={circuit.svgPath}
+              alt={`Trazado del circuito ${circuit.circuitName}`}
+              class="max-h-90 w-full object-contain"
+            />
+          ) : (
+            <p class="font-mono text-xs text-slate-500 uppercase tracking-wider">
+              Circuito no disponible
+            </p>
+          )}
+        </div>
+      </section>
+
+      <!-- Columna derecha: Datos + Clima en vivo -->
+      <aside class="space-y-6">
+        <section class="bg-[#0d111a] border border-slate-800/80 rounded-2xl p-6 space-y-4">
+          <h2 class="text-base font-bold text-white border-b border-slate-800/80 pb-3">
+            Información del Circuito
+          </h2>
+
+          <dl class="space-y-3 text-sm">
+            {circuit.seasonData && (
+              <>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-400">Gran Premio</dt>
+                  <dd class="text-white font-medium text-right">{circuit.seasonData.raceName}</dd>
+                </div>
+                <div class="flex justify-between gap-4">
+                  <dt class="text-slate-400">Fecha</dt>
+                  <dd class="text-slate-200 font-mono text-xs text-right">
+                    {formatFullDate(circuit.seasonData.date)}
+                  </dd>
+                </div>
+              </>
+            )}
+            <div class="flex justify-between gap-4">
+              <dt class="text-slate-400">Ciudad</dt>
+              <dd class="text-slate-200 text-right">{circuit.locality}</dd>
+            </div>
+            <div class="flex justify-between gap-4">
+              <dt class="text-slate-400">País</dt>
+              <dd class="text-slate-200 text-right">{circuit.country}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <!-- Widget de clima en vivo reutilizado -->
+        <CircuitWeather
+          lat={circuit.coordinates.lat}
+          lon={circuit.coordinates.lon}
+        />
+      </aside>
+    </div>
+  </main>
+</Layout>
