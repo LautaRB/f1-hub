@@ -1,7 +1,8 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import CircuitMap from '../../components/widgets/CircuitMap.astro';
 import CircuitWeather from '../../components/widgets/CircuitWeather.astro';
-import { getAllCircuits, type CircuitItem } from '../../services/f1Api';
+import { getAllCircuits, getCircuitTelemetry, type CircuitItem } from '../../services/f1Api';
 
 export async function getStaticPaths() {
   const circuits = await getAllCircuits();
@@ -18,14 +19,15 @@ interface Props {
 
 const { circuit } = Astro.props;
 
-function formatFullDate(dateStr: string) {
-  return new Intl.DateTimeFormat('es-AR', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(new Date(`${dateStr}T00:00:00Z`));
-}
+const telemetry =
+  circuit.inCurrentSeason && circuit.seasonData
+    ? await getCircuitTelemetry(
+        circuit.circuitId,
+        circuit.seasonData.season,
+        circuit.seasonData.date,
+        circuit.svgPath
+      )
+    : null;
 ---
 
 <Layout title={`${circuit.circuitName} — F1 Hub`}>
@@ -72,40 +74,84 @@ function formatFullDate(dateStr: string) {
       </header>
     </div>
 
-    <!-- Layout principal: Mapa + Panel lateral -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Trazado SVG -->
-      <section class="lg:col-span-2 bg-[#0d111a] border border-slate-800/80 rounded-2xl p-6 flex flex-col">
-        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 mb-6">
-          <div class="flex items-center gap-2">
-            <span class="w-4 h-1 rounded-full bg-sky-400"></span>
-            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-            <span class="font-mono text-xs tracking-widest text-slate-400 uppercase">
-              TRACK LAYOUT // {circuit.circuitId.toUpperCase()}
-            </span>
-          </div>
-          <span class="font-mono text-xs text-slate-500">
-            {circuit.coordinates.lat.toFixed(4)}°, {circuit.coordinates.lon.toFixed(4)}°
-          </span>
-        </div>
-
-        <div class="flex-1 min-h-80 flex items-center justify-center rounded-xl bg-[#090d14] border border-slate-800/60 p-8">
-          {circuit.svgPath ? (
-            <img
-              src={circuit.svgPath}
-              alt={`Trazado del circuito ${circuit.circuitName}`}
-              class="max-h-90 w-full object-contain"
+    <!-- Layout principal: Mapa (8 cols) + Panel lateral (4 cols) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <!-- Columna izquierda -->
+      <div class="lg:col-span-8 flex flex-col gap-5">
+        {telemetry ? (
+          <>
+            <CircuitMap
+              circuitId={circuit.circuitId}
+              telemetry={telemetry}
+              circuitName={circuit.circuitName}
+              topSpeed={telemetry.topSpeed}
             />
-          ) : (
-            <p class="font-mono text-xs text-slate-500 uppercase tracking-wider">
-              Circuito no disponible
-            </p>
-          )}
-        </div>
-      </section>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
+                <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
+                <span class="text-xs text-slate-400 block mb-1">Longitud:</span>
+                <span class="text-xl lg:text-2xl font-black text-white">{telemetry.length}</span>
+              </div>
+
+              <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
+                <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
+                <span class="text-xs text-slate-400 block mb-1">Vueltas:</span>
+                <span class="text-xl lg:text-2xl font-black text-white">{telemetry.laps}</span>
+              </div>
+
+              <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
+                <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
+                <span class="text-xs text-slate-400 block mb-1">Top Speed:</span>
+                <span class="text-xl lg:text-2xl font-black text-white">{telemetry.topSpeed || 'N/A'}</span>
+              </div>
+
+              <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
+                <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
+                <span class="text-xs text-slate-400 block mb-1">Récord de Vuelta:</span>
+                <div class="flex flex-col">
+                  <span class="text-xl lg:text-2xl font-black text-white">{telemetry.lapRecord?.time || 'N/A'}</span>
+                  <span class="text-[10px] text-slate-400 truncate">
+                    {telemetry.lapRecord ? `${telemetry.lapRecord.driver} (${telemetry.lapRecord.year})` : ''}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </>
+        ) : (
+          <section class="bg-[#0d111a] border border-slate-800/80 rounded-2xl p-6 flex flex-col">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 mb-6">
+              <div class="flex items-center gap-2">
+                <span class="w-4 h-1 rounded-full bg-sky-400"></span>
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                <span class="font-mono text-xs tracking-widest text-slate-400 uppercase">
+                  TRACK LAYOUT // {circuit.circuitId.toUpperCase()}
+                </span>
+              </div>
+              <span class="font-mono text-xs text-slate-500">
+                {circuit.coordinates.lat.toFixed(4)}°, {circuit.coordinates.lon.toFixed(4)}°
+              </span>
+            </div>
+
+            <div class="flex-1 min-h-80 flex items-center justify-center rounded-xl bg-[#090d14] border border-slate-800/60 p-8">
+              {circuit.svgPath ? (
+                <img
+                  src={circuit.svgPath}
+                  alt={`Trazado del circuito ${circuit.circuitName}`}
+                  class="max-h-90 w-full object-contain"
+                />
+              ) : (
+                <p class="font-mono text-xs text-slate-500 uppercase tracking-wider">
+                  Circuito no disponible
+                </p>
+              )}
+            </div>
+          </section>
+        )}
+      </div>
 
       <!-- Columna derecha: Datos + Clima en vivo -->
-      <aside class="space-y-6">
+      <aside class="lg:col-span-4 space-y-6">
         <section class="bg-[#0d111a] border border-slate-800/80 rounded-2xl p-6 space-y-4">
           <h2 class="text-base font-bold text-white border-b border-slate-800/80 pb-3">
             Información del Circuito
@@ -121,7 +167,7 @@ function formatFullDate(dateStr: string) {
                 <div class="flex justify-between gap-4">
                   <dt class="text-slate-400">Fecha</dt>
                   <dd class="text-slate-200 font-mono text-xs text-right">
-                    {formatFullDate(circuit.seasonData.date)}
+                    {circuit.seasonData.date}
                   </dd>
                 </div>
               </>
@@ -137,10 +183,10 @@ function formatFullDate(dateStr: string) {
           </dl>
         </section>
 
-        <!-- Widget de clima en vivo reutilizado -->
         <CircuitWeather
           lat={circuit.coordinates.lat}
           lon={circuit.coordinates.lon}
+          locality={circuit.locality}
         />
       </aside>
     </div>

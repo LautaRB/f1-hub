@@ -30,11 +30,47 @@ async function fetchJolpica(url: string, retries = 2): Promise<Response> {
   throw new Error('HTTP Error: Max retries reached');
 }
 
+const telemetryCache = new Map<string, { data: CircuitTelemetryConfig; expiresAt: number }>();
+
+export async function getCircuitTelemetry(
+  circuitId: string,
+  season?: string,
+  raceDate?: string,
+  fallbackSvgPath?: string | null
+): Promise<CircuitTelemetryConfig> {
+  const cacheKey = `${circuitId}-${season ?? 'historic'}-${raceDate ?? ''}`;
+  const cached = telemetryCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiresAt) {
+    return cached.data;
+  }
+
+  const specs = getCircuitSpecs(circuitId);
+  const dynamicMap =
+    season && raceDate ? await getDynamicTrackMap(season, raceDate) : null;
+
+  const telemetry: CircuitTelemetryConfig = {
+    ...specs,
+    circuitId,
+    svgPath: getLatestCircuitSvg(circuitId) || fallbackSvgPath || '',
+    dynamicMap: dynamicMap ?? undefined,
+  };
+
+  telemetryCache.set(cacheKey, {
+    data: telemetry,
+    expiresAt: Date.now() + CACHE_TTL_MS,
+  });
+
+  return telemetry;
+}
+
 export async function getNextRaceData(): Promise<NextRaceData | null> {
+  if (cachedNextRace && Date.now() < cachedNextRace.expiresAt) {
+    return cachedNextRace.data;
+  }
+  
   try {
     const res = await fetchJolpica('https://api.jolpi.ca/ergast/f1/current/next.json');
     const data = await res.json();
-    if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
 
     const race = data.MRData.RaceTable.Races[0];
     if (!race) return null;
@@ -56,18 +92,7 @@ export async function getNextRaceData(): Promise<NextRaceData | null> {
     });
 
     const circuitId = race.Circuit.circuitId;
-    
-    // Busca datos técnicos del circuito en el JSON local
-    const specs = getCircuitSpecs(circuitId);
-    const dynamicMap = await getDynamicTrackMap(race.season, race.date);
-
-    // 2. Arma el objeto telemetry con los datos del circuito y la ruta del SVG
-    const telemetry: CircuitTelemetryConfig = {
-      ...specs,
-      circuitId,
-      svgPath: getLatestCircuitSvg(circuitId),
-      dynamicMap: dynamicMap ?? undefined,
-    };
+    const telemetry = await getCircuitTelemetry(circuitId, race.season, race.date);
 
     const result: NextRaceData = {
       season: race.season,
@@ -313,7 +338,7 @@ export async function getAllCircuits(): Promise<CircuitItem[]> {
           lat: Number(raw.Location.lat),
           lon: Number(raw.Location.long),
         },
-        svgPath: findSvgForCircuit(raw, svgFiles),
+        svgPath: getLatestCircuitSvg(raw.circuitId) || findSvgForCircuit(raw, svgFiles),
         inCurrentSeason: Boolean(current),
         seasonData: current
           ? {
