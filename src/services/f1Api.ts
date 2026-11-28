@@ -291,12 +291,69 @@ async function getLocalCircuitSvgs(): Promise<string[]> {
   }
 }
 
+const CIRCUIT_SVG_ALIASES: Record<string, string[]> = {
+  // Temporada actual / modernos
+  albert_park: ['melbourne', 'australia'],
+  americas: ['austin', 'cota'],
+  bahrain: ['sakhir'],
+  baku: ['azerbaijan'],
+  catalunya: ['barcelona', 'montmelo', 'spain'],
+  hungaroring: ['budapest', 'hungary'],
+  imola: ['emiliaromagna', 'enzo'],
+  interlagos: ['saopaulo', 'brazil'],
+  jeddah: ['saudiarabia'],
+  losail: ['lusail', 'qatar'],
+  marina_bay: ['singapore'],
+  miami: ['miami'],
+  monaco: ['montecarlo'],
+  monza: ['italy'],
+  red_bull_ring: ['spielberg', 'austria'],
+  rodriguez: ['mexico', 'mexicocity'],
+  shanghai: ['china'],
+  silverstone: ['greatbritain', 'britain'],
+  spa: ['spafrancorchamps', 'belgium'],
+  suzuka: ['japan'],
+  vegas: ['lasvegas'],
+  villeneuve: ['montreal', 'canada'],
+  yas_marina: ['abudhabi'],
+  zandvoort: ['netherlands'],
+
+  // Históricos frecuentes en repos de SVG
+  adelaide: ['adelaide'],
+  brands_hatch: ['brandshatch'],
+  buddh: ['india'],
+  donington: ['donington'],
+  estoril: ['estoril'],
+  fuji: ['fuji'],
+  galvez: ['buenosaires', 'argentina'],
+  hockenheimring: ['hockenheim'],
+  indianapolis: ['indy'],
+  istanbul: ['turkey'],
+  jacarepagua: ['rio'],
+  jarama: ['jarama'],
+  jerez: ['jerez'],
+  kyalami: ['southafrica'],
+  magny_cours: ['magnycours'],
+  mugello: ['mugello'],
+  nurburgring: ['nurburgring'],
+  paul_ricard: ['lecastellet', 'france'],
+  portimao: ['algarve', 'portugal'],
+  sepang: ['malaysia'],
+  sochi: ['russia'],
+  valencia: ['valencia'],
+  watkins_glen: ['watkinsglen'],
+  yeongam: ['korea'],
+  zolder: ['zolder'],
+};
+
 function findSvgForCircuit(circuit: JolpicaCircuitRaw, svgFiles: string[]): string | null {
+  const aliases = CIRCUIT_SVG_ALIASES[circuit.circuitId] ?? [];
   const candidates = [
     normalizeKey(circuit.circuitId),
+    ...aliases.map(normalizeKey),
     normalizeKey(circuit.Location.locality),
     normalizeKey(circuit.circuitName),
-  ];
+  ].filter(Boolean);
 
   for (const candidate of candidates) {
     const match = svgFiles.find((file) => {
@@ -325,34 +382,37 @@ export async function getAllCircuits(): Promise<CircuitItem[]> {
     const rawCircuits: JolpicaCircuitRaw[] = data?.MRData?.CircuitTable?.Circuits ?? [];
     const seasonMap = new Map(seasonCircuits.map((c) => [c.circuitId, c]));
 
-    const items: CircuitItem[] = rawCircuits.map((raw) => {
-      const current = seasonMap.get(raw.circuitId);
+    const items: CircuitItem[] = rawCircuits
+      .map((raw) => {
+        const current = seasonMap.get(raw.circuitId);
 
-      return {
-        circuitId: raw.circuitId,
-        circuitName: raw.circuitName,
-        locality: raw.Location.locality,
-        country: raw.Location.country,
-        wikiUrl: raw.url,
-        coordinates: {
-          lat: Number(raw.Location.lat),
-          lon: Number(raw.Location.long),
-        },
-        svgPath: getLatestCircuitSvg(raw.circuitId) || findSvgForCircuit(raw, svgFiles),
-        inCurrentSeason: Boolean(current),
-        seasonData: current
-          ? {
-              round: current.round,
-              season: current.season,
-              raceName: current.raceName,
-              date: current.date,
-              time: current.time,
-              hasSprint: current.hasSprint,
-              status: current.status,
-            }
-          : undefined,
-      };
-    });
+        return {
+          circuitId: raw.circuitId,
+          circuitName: raw.circuitName,
+          locality: raw.Location.locality,
+          country: raw.Location.country,
+          wikiUrl: raw.url,
+          coordinates: {
+            lat: Number(raw.Location.lat),
+            lon: Number(raw.Location.long),
+          },
+          svgPath: getLatestCircuitSvg(raw.circuitId) || findSvgForCircuit(raw, svgFiles),
+          inCurrentSeason: Boolean(current),
+          seasonData: current
+            ? {
+                round: current.round,
+                season: current.season,
+                raceName: current.raceName,
+                date: current.date,
+                time: current.time,
+                hasSprint: current.hasSprint,
+                status: current.status,
+              }
+            : undefined,
+        };
+      })
+      // Mantiene toda la temporada actual + solo históricos con SVG disponible
+      .filter((circuit) => circuit.inCurrentSeason || circuit.svgPath !== null);
 
     items.sort((a, b) => {
       if (a.inCurrentSeason && b.inCurrentSeason) {
