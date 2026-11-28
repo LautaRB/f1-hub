@@ -1,1 +1,37 @@
 @import "tailwindcss";
+
+/* Habilita la variante dark: por clase .dark en <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --bg-canvas: #f4f6f9;
+  --bg-surface: #ffffff;
+  --bg-muted: #e9edf4;
+  --border-subtle: #cbd5e1;
+  --text-primary: #0f172a;
+  --text-muted: #475569;
+  --accent-primary: #dc2626;
+  --accent-telemetry: #0284c7;
+}
+
+.dark {
+  --bg-canvas: #0b0e14;
+  --bg-surface: #111622;
+  --bg-muted: #080b10;
+  --border-subtle: #1e293b;
+  --text-primary: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent-primary: #ef4444;
+  --accent-telemetry: #38bdf8;
+}
+
+@theme inline {
+  --color-canvas: var(--bg-canvas);
+  --color-surface: var(--bg-surface);
+  --color-muted: var(--bg-muted);
+  --color-line: var(--border-subtle);
+  --color-ink: var(--text-primary);
+  --color-ink-muted: var(--text-muted);
+  --color-f1-red: var(--accent-primary);
+  --color-f1-cyan: var(--accent-telemetry);
+}
