@@ -36,7 +36,7 @@ const telemetry =
     <div class="space-y-4">
       <a
         href="/circuits/circuits"
-        class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-slate-400 hover:text-white transition-colors"
+        class="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-ink-muted hover:text-ink transition-colors"
       >
         ← Volver a circuitos
       </a>
@@ -44,21 +44,21 @@ const telemetry =
       <header class="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div class="border-l-2 border-red-500 pl-4">
           <div class="flex flex-wrap items-center gap-2 mb-1">
-            <span class="text-xs font-mono uppercase tracking-widest text-slate-400">
+            <span class="text-xs font-mono uppercase tracking-widest text-ink-muted">
               {circuit.seasonData
                 ? `Temporada ${circuit.seasonData.season} · Ronda ${circuit.seasonData.round}`
                 : 'Circuito Histórico de F1'}
             </span>
             {circuit.seasonData?.hasSprint && (
-              <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-sky-400/10 text-sky-400 border border-sky-400/30">
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-sky-400/10 text-f1-cyan border border-sky-400/30">
                 Sprint
               </span>
             )}
           </div>
-          <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white">
+          <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-ink">
             {circuit.circuitName}
           </h1>
-          <p class="text-slate-400 mt-1">
+          <p class="text-ink-muted mt-1">
             {circuit.locality}, {circuit.country}
           </p>
         </div>
@@ -67,7 +67,7 @@ const telemetry =
           href={circuit.wikiUrl}
           target="_blank"
           rel="noopener noreferrer"
-          class="self-start md:self-auto px-4 py-2 rounded-lg text-xs font-mono uppercase tracking-wider bg-[#0d111a] border border-slate-800 text-slate-300 hover:border-sky-400/60 hover:text-sky-400 transition-colors"
+          class="self-start md:self-auto px-4 py-2 rounded-lg text-xs font-mono uppercase tracking-wider bg-surface border border-line text-ink-muted hover:border-sky-400/60 hover:text-f1-cyan transition-colors"
         >
           Ficha Wikipedia ↗
         </a>
@@ -88,30 +88,30 @@ const telemetry =
             />
 
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
+              <div class="bg-surface border border-line rounded-xl p-4 relative">
                 <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
-                <span class="text-xs text-slate-400 block mb-1">Longitud:</span>
-                <span class="text-xl lg:text-2xl font-black text-white">{telemetry.length}</span>
+                <span class="text-xs text-ink-muted block mb-1">Longitud:</span>
+                <span class="text-xl lg:text-2xl font-black text-ink">{telemetry.length}</span>
               </div>
 
-              <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
+              <div class="bg-surface border border-line rounded-xl p-4 relative">
                 <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
-                <span class="text-xs text-slate-400 block mb-1">Vueltas:</span>
-                <span class="text-xl lg:text-2xl font-black text-white">{telemetry.laps}</span>
+                <span class="text-xs text-ink-muted block mb-1">Vueltas:</span>
+                <span class="text-xl lg:text-2xl font-black text-ink">{telemetry.laps}</span>
               </div>
 
-              <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
+              <div class="bg-surface border border-line rounded-xl p-4 relative">
                 <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
-                <span class="text-xs text-slate-400 block mb-1">Top Speed:</span>
-                <span class="text-xl lg:text-2xl font-black text-white">{telemetry.topSpeed || 'N/A'}</span>
+                <span class="text-xs text-ink-muted block mb-1">Top Speed:</span>
+                <span class="text-xl lg:text-2xl font-black text-ink">{telemetry.topSpeed || 'N/A'}</span>
               </div>
 
-              <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
+              <div class="bg-surface border border-line rounded-xl p-4 relative">
                 <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
-                <span class="text-xs text-slate-400 block mb-1">Récord de Vuelta:</span>
+                <span class="text-xs text-ink-muted block mb-1">Récord de Vuelta:</span>
                 <div class="flex flex-col">
-                  <span class="text-xl lg:text-2xl font-black text-white">{telemetry.lapRecord?.time || 'N/A'}</span>
-                  <span class="text-[10px] text-slate-400 truncate">
+                  <span class="text-xl lg:text-2xl font-black text-ink">{telemetry.lapRecord?.time || 'N/A'}</span>
+                  <span class="text-[10px] text-ink-muted truncate">
                     {telemetry.lapRecord ? `${telemetry.lapRecord.driver} (${telemetry.lapRecord.year})` : ''}
                   </span>
                 </div>
@@ -119,12 +119,12 @@ const telemetry =
             </div>
           </>
         ) : (
-          <section class="bg-[#0d111a] border border-slate-800/80 rounded-2xl p-6 flex flex-col">
-            <div class="flex items-center justify-between border-b border-slate-800/80 pb-3 mb-6">
+          <section class="bg-surface border border-line rounded-2xl p-6 flex flex-col">
+            <div class="flex items-center justify-between border-b border-line pb-3 mb-6">
               <div class="flex items-center gap-2">
                 <span class="w-4 h-1 rounded-full bg-sky-400"></span>
                 <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                <span class="font-mono text-xs tracking-widest text-slate-400 uppercase">
+                <span class="font-mono text-xs tracking-widest text-ink-muted uppercase">
                   TRACK LAYOUT // {circuit.circuitId.toUpperCase()}
                 </span>
               </div>
@@ -133,12 +133,13 @@ const telemetry =
               </span>
             </div>
 
-            <div class="flex-1 min-h-80 flex items-center justify-center rounded-xl bg-[#090d14] border border-slate-800/60 p-8">
+            <div class="flex-1 min-h-80 flex items-center justify-center rounded-xl bg-muted border border-line p-8">
               {circuit.svgPath ? (
                 <img
                   src={circuit.svgPath}
-                  alt={`Trazado del circuito ${circuit.circuitName}`}
-                  class="max-h-90 w-full object-contain"
+                  alt={`Trazado de ${circuit.circuitName}`}
+                  loading="lazy"
+                  class="max-h-full max-w-full object-contain invert dark:invert-0 opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-200"
                 />
               ) : (
                 <p class="font-mono text-xs text-slate-500 uppercase tracking-wider">
@@ -152,8 +153,8 @@ const telemetry =
 
       <!-- Columna derecha: Datos + Clima en vivo -->
       <aside class="lg:col-span-4 space-y-6">
-        <section class="bg-[#0d111a] border border-slate-800/80 rounded-2xl p-6 space-y-4">
-          <h2 class="text-base font-bold text-white border-b border-slate-800/80 pb-3">
+        <section class="bg-surface border border-line rounded-2xl p-6 space-y-4">
+          <h2 class="text-base font-bold text-ink border-b border-line pb-3">
             Información del Circuito
           </h2>
 
@@ -161,24 +162,24 @@ const telemetry =
             {circuit.seasonData && (
               <>
                 <div class="flex justify-between gap-4">
-                  <dt class="text-slate-400">Gran Premio</dt>
-                  <dd class="text-white font-medium text-right">{circuit.seasonData.raceName}</dd>
+                  <dt class="text-ink-muted">Gran Premio</dt>
+                  <dd class="text-ink font-medium text-right">{circuit.seasonData.raceName}</dd>
                 </div>
                 <div class="flex justify-between gap-4">
-                  <dt class="text-slate-400">Fecha</dt>
-                  <dd class="text-slate-200 font-mono text-xs text-right">
+                  <dt class="text-ink-muted">Fecha</dt>
+                  <dd class="text-ink-muted font-mono text-xs text-right">
                     {circuit.seasonData.date}
                   </dd>
                 </div>
               </>
             )}
             <div class="flex justify-between gap-4">
-              <dt class="text-slate-400">Ciudad</dt>
-              <dd class="text-slate-200 text-right">{circuit.locality}</dd>
+              <dt class="text-ink-muted">Ciudad</dt>
+              <dd class="text-ink-muted text-right">{circuit.locality}</dd>
             </div>
             <div class="flex justify-between gap-4">
-              <dt class="text-slate-400">País</dt>
-              <dd class="text-slate-200 text-right">{circuit.country}</dd>
+              <dt class="text-ink-muted">País</dt>
+              <dd class="text-ink-muted text-right">{circuit.country}</dd>
             </div>
           </dl>
         </section>

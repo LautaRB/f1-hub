@@ -12,15 +12,15 @@ const { lat, lon, locality } = Astro.props;
   data-circuit-weather
   data-lat={lat}
   data-lon={lon}
-  class="bg-[#111621] border border-slate-800/80 rounded-xl p-3.5 flex flex-col gap-3"
+  class="bg-surface border border-line rounded-xl p-3.5 flex flex-col gap-3"
 >
   <div class="flex items-center justify-between gap-2">
-    <span class="text-xs font-semibold text-white tracking-wide">
+    <span class="text-xs font-semibold text-ink tracking-wide">
       Clima en el Circuito
     </span>
     <span
       data-weather-status
-      class="text-[10px] font-mono uppercase tracking-wider text-slate-400"
+      class="text-[10px] font-mono uppercase tracking-wider text-ink-muted"
     >
       {locality ? `${locality} · ` : ''}Cargando...
     </span>
@@ -31,12 +31,12 @@ const { lat, lon, locality } = Astro.props;
     <div class="flex items-center gap-3">
       <div
         data-weather-temp
-        class="min-w-13 h-11 px-2.5 rounded-lg bg-sky-500/10 border border-sky-500/25 flex items-center justify-center font-mono text-lg font-bold text-sky-400"
+        class="min-w-13 h-11 px-2.5 rounded-lg bg-sky-500/10 border border-sky-500/25 flex items-center justify-center font-mono text-lg font-bold text-f1-cyan"
       >
         --°
       </div>
       <div class="flex flex-col">
-        <span data-weather-desc class="text-xs font-medium text-slate-200">
+        <span data-weather-desc class="text-xs font-medium text-ink-muted">
           Consultando telemetría...
         </span>
         <span class="text-[11px] font-mono text-slate-500">
@@ -47,18 +47,18 @@ const { lat, lon, locality } = Astro.props;
   </div>
 
   <!-- Métricas rápidas: Viento, Humedad y Probabilidad de lluvia -->
-  <div class="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-800/70 text-[11px] font-mono">
+  <div class="grid grid-cols-3 gap-2 pt-2.5 border-t border-line text-[11px] font-mono">
     <div class="flex flex-col">
       <span class="text-slate-500 uppercase text-[10px]">Viento</span>
-      <span data-weather-wind class="text-slate-200 font-semibold">-- km/h</span>
+      <span data-weather-wind class="text-ink-muted font-semibold">-- km/h</span>
     </div>
     <div class="flex flex-col">
       <span class="text-slate-500 uppercase text-[10px]">Humedad</span>
-      <span data-weather-humidity class="text-slate-200 font-semibold">--%</span>
+      <span data-weather-humidity class="text-ink-muted font-semibold">--%</span>
     </div>
     <div class="flex flex-col">
       <span class="text-slate-500 uppercase text-[10px]">Lluvia hoy</span>
-      <span data-weather-rain class="text-slate-200 font-semibold">--%</span>
+      <span data-weather-rain class="text-ink-muted font-semibold">--%</span>
     </div>
   </div>
 </div>
@@ -127,7 +127,7 @@ const { lat, lon, locality } = Astro.props;
         if (rainEl) {
           rainEl.textContent = `${rainProb}%`;
           if (rainProb >= 40) {
-            rainEl.classList.remove('text-slate-200');
+            rainEl.classList.remove('text-ink-muted');
             rainEl.classList.add('text-amber-400');
           }
         }

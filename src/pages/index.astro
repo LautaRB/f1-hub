@@ -1,8 +1,8 @@
 ---
-import Layout from '../layouts/Layout.astro';
-import CircuitMap from '../components/widgets/CircuitMap.astro';
-import CircuitWeather from '../components/widgets/CircuitWeather.astro';
-import { getNextRaceData, formatSessionToArgTime } from '../services/f1Api';
+import Layout from "../layouts/Layout.astro";
+import CircuitMap from "../components/widgets/CircuitMap.astro";
+import CircuitWeather from "../components/widgets/CircuitWeather.astro";
+import { getNextRaceData, formatSessionToArgTime } from "../services/f1Api";
 
 const race = await getNextRaceData();
 const telemetry = race?.telemetry;
@@ -11,76 +11,84 @@ const telemetry = race?.telemetry;
 <Layout raceDate={race?.date}>
   {race && telemetry ? (
     <div class="flex flex-col gap-6">
-      
       <!-- Encabezado superior -->
       <div class="border-l-2 border-red-600 pl-4 py-0.5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <span class="text-xs font-medium text-slate-400 block mb-0.5">
+          <span class="text-xs font-medium text-ink-muted block mb-0.5">
             Próximo circuito · Ronda {race.round}
           </span>
-          <h1 class="text-2xl sm:text-4xl font-black uppercase tracking-tight text-white">
+          <h1 class="text-2xl sm:text-4xl font-black uppercase tracking-tight text-ink">
             {race.raceName}
           </h1>
-          <p class="text-sm text-slate-400 mt-0.5">
-            {race.circuit.circuitName} — {race.circuit.locality}, {race.circuit.country}
+          <p class="text-sm text-ink-muted mt-0.5">
+            {race.circuit.circuitName} — {race.circuit.locality},{" "}
+            {race.circuit.country}
           </p>
         </div>
       </div>
 
       <!-- Grilla Principal -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
         <!-- Columna Izquierda (8 cols): Mapa Modular + Métricas -->
         <div class="lg:col-span-8 flex flex-col gap-5">
-          
           <!-- Renderizado del Componente de Mapa -->
-          <CircuitMap 
+          <CircuitMap
             circuitId={race.circuit.circuitId}
             telemetry={telemetry}
             circuitName={race.circuit.circuitName}
-            topSpeed={telemetry.topSpeed} 
+            topSpeed={telemetry.topSpeed}
           />
 
           <!-- 4 Cajas Inferiores de Métricas (Ajustado a grid-cols-4) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-            <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
+            <div class="bg-surface border border-line rounded-xl p-4 relative">
               <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
-              <span class="text-xs text-slate-400 block mb-1">Longitud:</span>
-              <span class="text-xl lg:text-2xl font-black text-white">{telemetry.length}</span>
+              <span class="text-xs text-ink-muted block mb-1">Longitud:</span>
+              <span class="text-xl lg:text-2xl font-black text-ink">
+                {telemetry.length}
+              </span>
             </div>
 
-            <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
+            <div class="bg-surface border border-line rounded-xl p-4 relative">
               <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
-              <span class="text-xs text-slate-400 block mb-1">Vueltas:</span>
-              <span class="text-xl lg:text-2xl font-black text-white">{telemetry.laps}</span>
+              <span class="text-xs text-ink-muted block mb-1">Vueltas:</span>
+              <span class="text-xl lg:text-2xl font-black text-ink">
+                {telemetry.laps}
+              </span>
             </div>
 
             <!-- Top Speed -->
-            <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
+            <div class="bg-surface border border-line rounded-xl p-4 relative">
               <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
-              <span class="text-xs text-slate-400 block mb-1">Top Speed:</span>
-              <span class="text-xl lg:text-2xl font-black text-white">{telemetry.topSpeed || 'N/A'}</span>
+              <span class="text-xs text-ink-muted block mb-1">Top Speed:</span>
+              <span class="text-xl lg:text-2xl font-black text-ink">
+                {telemetry.topSpeed || "N/A"}
+              </span>
             </div>
 
-            <div class="bg-[#111621] border border-slate-800/90 rounded-xl p-4 relative">
+            <div class="bg-surface border border-line rounded-xl p-4 relative">
               <span class="w-2 h-2 rounded-full bg-red-600 absolute top-3.5 right-3.5"></span>
-              <span class="text-xs text-slate-400 block mb-1">Récord de Vuelta:</span>
+              <span class="text-xs text-ink-muted block mb-1">
+                Récord de Vuelta:
+              </span>
               <div class="flex flex-col">
-                <span class="text-xl lg:text-2xl font-black text-white">{telemetry.lapRecord?.time || 'N/A'}</span>
-                <span class="text-[10px] text-slate-400 truncate">
-                  {telemetry.lapRecord ? `${telemetry.lapRecord.driver} (${telemetry.lapRecord.year})` : ''}
+                <span class="text-xl lg:text-2xl font-black text-ink">
+                  {telemetry.lapRecord?.time || "N/A"}
+                </span>
+                <span class="text-[10px] text-ink-muted truncate">
+                  {telemetry.lapRecord
+                    ? `${telemetry.lapRecord.driver} (${telemetry.lapRecord.year})`
+                    : ""}
                 </span>
               </div>
             </div>
           </div>
-
         </div>
 
         <!-- Columna Derecha (4 cols): Información del GP y Cronograma -->
-        <aside class="lg:col-span-4 bg-[#111621] border border-slate-800/90 rounded-2xl p-5 flex flex-col gap-6">
-          
-          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
-            <h2 class="text-base font-bold text-white">Información del GP</h2>
+        <aside class="lg:col-span-4 bg-surface border border-line rounded-2xl p-5 flex flex-col gap-6">
+          <div class="flex items-center justify-between border-b border-line pb-3">
+            <h2 class="text-base font-bold text-ink">Información del GP</h2>
             <span class="text-xs font-mono text-slate-500">GMT-3 (ARG)</span>
           </div>
 
@@ -95,32 +103,41 @@ const telemetry = race?.telemetry;
 
           <!-- Cronograma -->
           <div>
-            <h3 class="text-sm font-bold text-white mb-3">Cronograma del Fin de Semana</h3>
+            <h3 class="text-sm font-bold text-ink mb-3">
+              Cronograma del Fin de Semana
+            </h3>
 
-            <div class="divide-y divide-slate-800/80 border-t border-b border-slate-800/80">
+            <div class="divide-y divide-line border-t border-b border-line">
               {race.sessions.map((session) => (
                 <div
                   class:list={[
-                    'py-3 px-2 flex items-center justify-between text-sm transition-colors',
-                    session.isMain ? 'bg-red-600/10 font-bold text-white rounded-lg my-1 px-3' : 'text-slate-300',
+                    "py-3 px-2 flex items-center justify-between text-sm transition-colors",
+                    session.isMain
+                      ? "bg-f1-red/10 font-bold text-ink rounded-lg my-1 px-3"
+                      : "text-ink-muted",
                   ]}
                 >
                   <span>{session.name}</span>
-                  <span class:list={['font-mono text-xs whitespace-nowrap', session.isMain ? 'text-red-400' : 'text-slate-200']}>
+                  <span
+                    class:list={[
+                      "font-mono text-xs whitespace-nowrap",
+                      session.isMain ? "text-f1-red" : "text-ink",
+                    ]}
+                  >
                     {formatSessionToArgTime(session.date, session.time)}
                   </span>
                 </div>
               ))}
             </div>
           </div>
-
         </aside>
-
       </div>
     </div>
   ) : (
-    <div class="bg-[#111621] border border-slate-800 rounded-xl p-8 text-center">
-      <p class="text-slate-300">No se pudo cargar la información del próximo Gran Premio.</p>
+    <div class="bg-surface border border-line rounded-xl p-8 text-center">
+      <p class="text-ink-muted">
+        No se pudo cargar la información del próximo Gran Premio.
+      </p>
     </div>
   )}
 </Layout>

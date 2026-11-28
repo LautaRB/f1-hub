@@ -23,26 +23,26 @@ function formatShortDate(dateStr: string) {
   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
     <header class="flex flex-col md:flex-row md:items-end justify-between gap-6">
       <div class="border-l-2 border-red-500 pl-4">
-        <p class="text-xs font-mono uppercase tracking-widest text-slate-400">
+        <p class="text-xs font-mono uppercase tracking-widest text-ink-muted">
           Catálogo oficial · Temporada {season} e históricos
         </p>
-        <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white mt-1">
+        <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-ink mt-1">
           CIRCUITOS
         </h1>
       </div>
 
       <div class="flex flex-wrap gap-3 font-mono text-xs">
-        <div class="bg-[#0d111a] border border-slate-800/80 rounded-lg px-3.5 py-2">
-          <span class="text-slate-400 block">TOTAL</span>
-          <span class="text-white text-sm font-bold">{totalCount}</span>
+        <div class="bg-surface border border-line rounded-lg px-3.5 py-2">
+          <span class="text-ink-muted block">TOTAL</span>
+          <span class="text-ink text-sm font-bold">{totalCount}</span>
         </div>
-        <div class="bg-[#0d111a] border border-slate-800/80 rounded-lg px-3.5 py-2">
-          <span class="text-red-400 block">TEMP. {season}</span>
-          <span class="text-white text-sm font-bold">{seasonCount}</span>
+        <div class="bg-surface border border-line rounded-lg px-3.5 py-2">
+          <span class="text-f1-red block">TEMP. {season}</span>
+          <span class="text-ink text-sm font-bold">{seasonCount}</span>
         </div>
-        <div class="bg-[#0d111a] border border-slate-800/80 rounded-lg px-3.5 py-2">
-          <span class="text-sky-400 block">HISTÓRICOS</span>
-          <span class="text-white text-sm font-bold">{historicCount}</span>
+        <div class="bg-surface border border-line rounded-lg px-3.5 py-2">
+          <span class="text-f1-cyan block">HISTÓRICOS</span>
+          <span class="text-ink text-sm font-bold">{historicCount}</span>
         </div>
       </div>
     </header>
@@ -53,7 +53,7 @@ function formatShortDate(dateStr: string) {
           id="circuit-search"
           type="search"
           placeholder="Buscar por circuito, ciudad, país o GP..."
-          class="w-full bg-[#0d111a] border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-sky-400/70 transition-colors"
+          class="w-full bg-surface border border-line rounded-lg px-4 py-2.5 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-f1-cyan transition-colors"
         />
       </div>
 
@@ -61,28 +61,28 @@ function formatShortDate(dateStr: string) {
         <button
           type="button"
           data-filter="all"
-          class="filter-btn px-3.5 py-2 rounded-lg text-xs font-mono uppercase tracking-wider border border-red-500/60 bg-red-500/15 text-red-400 transition-colors"
+          class="filter-btn px-3.5 py-2 rounded-lg text-xs font-mono uppercase tracking-wider border border-red-500/60 bg-red-500/15 text-f1-red transition-colors"
         >
           Todos
         </button>
         <button
           type="button"
           data-filter="season"
-          class="filter-btn px-3.5 py-2 rounded-lg text-xs font-mono uppercase tracking-wider border border-slate-800 bg-[#0d111a] text-slate-400 hover:text-slate-200 transition-colors"
+          class="filter-btn px-3.5 py-2 rounded-lg text-xs font-mono uppercase tracking-wider border border-line bg-surface text-ink-muted hover:text-ink-muted transition-colors"
         >
           Temporada {season}
         </button>
         <button
           type="button"
           data-filter="sprint"
-          class="filter-btn px-3.5 py-2 rounded-lg text-xs font-mono uppercase tracking-wider border border-slate-800 bg-[#0d111a] text-slate-400 hover:text-slate-200 transition-colors"
+          class="filter-btn px-3.5 py-2 rounded-lg text-xs font-mono uppercase tracking-wider border border-line bg-surface text-ink-muted hover:text-ink-muted transition-colors"
         >
           Sprint
         </button>
         <button
           type="button"
           data-filter="historic"
-          class="filter-btn px-3.5 py-2 rounded-lg text-xs font-mono uppercase tracking-wider border border-slate-800 bg-[#0d111a] text-slate-400 hover:text-slate-200 transition-colors"
+          class="filter-btn px-3.5 py-2 rounded-lg text-xs font-mono uppercase tracking-wider border border-line bg-surface text-ink-muted hover:text-ink-muted transition-colors"
         >
           Históricos
         </button>
@@ -97,10 +97,10 @@ function formatShortDate(dateStr: string) {
           <a
             href={`/circuits/${circuit.circuitId}`}
             class:list={[
-              'circuit-card group relative flex flex-col justify-between bg-[#0d111a] border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5',
+              'circuit-card group relative flex flex-col justify-between bg-surface border rounded-xl p-5 transition-all duration-200 hover:-translate-y-0.5',
               isNext
                 ? 'border-red-500/60 ring-1 ring-red-500/20'
-                : 'border-slate-800/80 hover:border-slate-600',
+                : 'border-line hover:border-slate-600',
             ]}
             data-season={String(circuit.inCurrentSeason)}
             data-sprint={String(Boolean(circuit.seasonData?.hasSprint))}
@@ -108,7 +108,7 @@ function formatShortDate(dateStr: string) {
           >
             <div>
               <div class="flex items-center justify-between gap-2 mb-3">
-                <span class="font-mono text-xs text-slate-400">
+                <span class="font-mono text-xs text-ink-muted">
                   {circuit.seasonData
                     ? `R${String(circuit.seasonData.round).padStart(2, '0')} · ${formatShortDate(circuit.seasonData.date)}`
                     : 'HISTÓRICO'}
@@ -116,12 +116,12 @@ function formatShortDate(dateStr: string) {
 
                 <div class="flex items-center gap-1.5">
                   {circuit.seasonData?.hasSprint && (
-                    <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-sky-400/10 text-sky-400 border border-sky-400/30">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-sky-400/10 text-f1-cyan border border-sky-400/30">
                       Sprint
                     </span>
                   )}
                   {isNext && (
-                    <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-red-500/15 text-red-400 border border-red-500/40">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-red-500/15 text-f1-red border border-red-500/40">
                       Próximo
                     </span>
                   )}
@@ -129,30 +129,29 @@ function formatShortDate(dateStr: string) {
               </div>
 
               {circuit.svgPath && (
-                <div class="h-28 my-3 flex items-center justify-center rounded-lg bg-[#090d14] border border-slate-800/60 p-3">
-                  {/* Si tus SVGs tienen trazo negro, agregá 'invert' a las clases del <img> */}
+                <div class="h-28 my-3 flex items-center justify-center rounded-lg bg-muted border border-line p-3">
                   <img
                     src={circuit.svgPath}
                     alt={`Trazado de ${circuit.circuitName}`}
                     loading="lazy"
-                    class="max-h-full max-w-full object-contain opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-200"
+                    class="max-h-full max-w-full object-contain invert dark:invert-0 opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-200"
                   />
                 </div>
               )}
 
-              <h2 class="text-lg font-bold text-white group-hover:text-red-400 transition-colors leading-snug">
+              <h2 class="text-lg font-bold text-ink group-hover:text-f1-red transition-colors leading-snug">
                 {circuit.circuitName}
               </h2>
-              <p class="text-sm text-slate-400 mt-1">
+              <p class="text-sm text-ink-muted mt-1">
                 {circuit.seasonData?.raceName ?? `${circuit.locality}, ${circuit.country}`}
               </p>
             </div>
 
-            <div class="mt-5 pt-3.5 border-t border-slate-800/70 flex items-center justify-between gap-2 text-xs">
-              <span class="text-slate-300 truncate">
+            <div class="mt-5 pt-3.5 border-t border-line flex items-center justify-between gap-2 text-xs">
+              <span class="text-ink-muted truncate">
                 {circuit.locality}, {circuit.country}
               </span>
-              <span class="font-mono text-[11px] text-sky-400/80 group-hover:translate-x-0.5 transition-transform shrink-0">
+              <span class="font-mono text-[11px] text-f1-cyan group-hover:translate-x-0.5 transition-transform shrink-0">
                 Ver detalle →
               </span>
             </div>
@@ -208,12 +207,12 @@ function formatShortDate(dateStr: string) {
 
       filterButtons.forEach((b) => {
         const isCurrent = b === btn;
-        b.classList.toggle('border-red-500/60', isCurrent);
-        b.classList.toggle('bg-red-500/15', isCurrent);
-        b.classList.toggle('text-red-400', isCurrent);
-        b.classList.toggle('border-slate-800', !isCurrent);
-        b.classList.toggle('bg-[#0d111a]', !isCurrent);
-        b.classList.toggle('text-slate-400', !isCurrent);
+        b.classList.toggle('border-f1-red/60', isCurrent);
+        b.classList.toggle('bg-f1-red/15', isCurrent);
+        b.classList.toggle('text-f1-red', isCurrent);
+        b.classList.toggle('border-line', !isCurrent);
+        b.classList.toggle('bg-surface', !isCurrent);
+        b.classList.toggle('text-ink-muted', !isCurrent);
       });
 
       applyFilters();

@@ -54,14 +54,14 @@ const hasSectors = Boolean(sectors);
 
 <div
   data-circuit-map
-  class="bg-[#0d121d] border border-slate-800/90 rounded-2xl p-5 flex flex-col justify-between min-h-107.5 relative overflow-hidden"
+  class="bg-surface border border-line rounded-2xl p-5 flex flex-col justify-between min-h-107.5 relative overflow-hidden transition-colors duration-200"
 >
   <!-- Header + Filtros dinámicos -->
   <div class="flex flex-wrap items-center justify-between gap-3 z-10">
-    <div class="flex items-center gap-2 text-[11px] font-mono tracking-wider text-slate-400 uppercase">
-      <span class="w-2.5 h-1 rounded-full bg-cyan-400"></span>
-      <span class="w-1 h-1 rounded-full bg-red-500"></span>
-      <span class="w-1 h-1 rounded-full bg-red-500"></span>
+    <div class="flex items-center gap-2 text-[11px] font-mono tracking-wider text-ink-muted uppercase">
+      <span class="w-2.5 h-1 rounded-full bg-f1-cyan"></span>
+      <span class="w-1 h-1 rounded-full bg-f1-red"></span>
+      <span class="w-1 h-1 rounded-full bg-f1-red"></span>
       <span>TELEMETRY MAP // {circuitName}</span>
     </div>
 
@@ -70,7 +70,7 @@ const hasSectors = Boolean(sectors);
         <button
           type="button"
           data-toggle="sectors"
-          class="px-2.5 py-1 rounded-lg text-[11px] font-mono border border-slate-800 bg-[#111621] text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer"
+          class="px-2.5 py-1 rounded-lg text-[11px] font-mono border border-line bg-muted text-ink-muted hover:text-ink hover:border-ink-muted/60 transition-colors cursor-pointer"
         >
           Sectores
         </button>
@@ -80,7 +80,7 @@ const hasSectors = Boolean(sectors);
         <button
           type="button"
           data-toggle="turns"
-          class="px-2.5 py-1 rounded-lg text-[11px] font-mono border border-slate-800 bg-[#111621] text-slate-400 hover:text-white hover:border-slate-700 transition-colors cursor-pointer"
+          class="px-2.5 py-1 rounded-lg text-[11px] font-mono border border-line bg-muted text-ink-muted hover:text-ink hover:border-ink-muted/60 transition-colors cursor-pointer"
         >
           Curvas ({dynamicTurns.length})
         </button>
@@ -100,29 +100,28 @@ const hasSectors = Boolean(sectors);
         <!-- Capa 1: Borde exterior / sombra -->
         <path
           d={trackPathD}
-          stroke="#1e293b"
           stroke-width={13 * scale}
           stroke-linecap="round"
           stroke-linejoin="round"
+          class="stroke-slate-300 dark:stroke-slate-800 transition-colors duration-300"
         />
 
         <!-- Capa 2: Trazado original limpio -->
         <path
           data-base-track
           d={trackPathD}
-          stroke="#e2e8f0"
           stroke-width={5.5 * scale}
           stroke-linecap="round"
           stroke-linejoin="round"
-          class="transition-colors duration-300"
+          class="stroke-slate-700 dark:stroke-slate-200 transition-all duration-300"
         />
 
         <!-- Capa 3: Sectores dinámicos desde OpenF1 -->
         {sectors && (
           <g data-layer="sectors" class="opacity-0 transition-opacity duration-300 pointer-events-none">
-            <path d={sectors.s1} stroke="#ef4444" stroke-width={6 * scale} stroke-linecap="round" stroke-linejoin="round" />
-            <path d={sectors.s2} stroke="#38bdf8" stroke-width={6 * scale} stroke-linecap="round" stroke-linejoin="round" />
-            <path d={sectors.s3} stroke="#fbbf24" stroke-width={6 * scale} stroke-linecap="round" stroke-linejoin="round" />
+            <path d={sectors.s1} stroke-width={6 * scale} stroke-linecap="round" stroke-linejoin="round" class="stroke-f1-red" />
+            <path d={sectors.s2} stroke-width={6 * scale} stroke-linecap="round" stroke-linejoin="round" class="stroke-f1-cyan" />
+            <path d={sectors.s3} stroke-width={6 * scale} stroke-linecap="round" stroke-linejoin="round" class="stroke-amber-500 dark:stroke-amber-400" />
           </g>
         )}
 
@@ -135,19 +134,18 @@ const hasSectors = Boolean(sectors);
                   cx={turn.x}
                   cy={turn.y}
                   r={10 * scale}
-                  fill="#0d121d"
-                  stroke="#94a3b8"
                   stroke-width={1.5 * scale}
+                  class="fill-surface stroke-ink-muted"
                 />
                 <text
                   x={turn.x}
                   y={turn.y}
-                  fill="#f8fafc"
                   font-size={9 * scale}
                   font-weight="700"
                   font-family="ui-monospace, monospace"
                   text-anchor="middle"
                   dominant-baseline="central"
+                  class="fill-ink"
                 >
                   {turn.label}
                 </text>
@@ -157,28 +155,28 @@ const hasSectors = Boolean(sectors);
         )}
       </svg>
     ) : (
-      <div class="text-center text-slate-500 font-mono text-xs border border-dashed border-slate-800 rounded-xl px-6 py-10">
+      <div class="text-center text-ink-muted font-mono text-xs border border-dashed border-line rounded-xl px-6 py-10">
         MAPA NO DISPONIBLE ({circuitId.toUpperCase()})
       </div>
     )}
   </div>
 
   <!-- Footer + Leyenda dinámica -->
-  <div class="flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-slate-500 uppercase">
+  <div class="flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-ink-muted uppercase">
     <span>CIRCUIT ID: {circuitId} · {mapSource}</span>
 
-    <div data-legend="sectors" class="hidden items-center gap-3 text-slate-300">
-      <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-red-500"></span> S1</span>
-      <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-sky-400"></span> S2</span>
-      <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-amber-400"></span> S3</span>
+    <div data-legend="sectors" class="hidden items-center gap-3 text-ink">
+      <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-f1-red"></span> S1</span>
+      <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-f1-cyan"></span> S2</span>
+      <span class="flex items-center gap-1.5"><span class="w-2.5 h-0.5 bg-amber-500 dark:bg-amber-400"></span> S3</span>
     </div>
   </div>
 </div>
 
 <script>
   const ACTIVE_STYLES: Record<string, string[]> = {
-    sectors: ['border-sky-500/50', 'bg-sky-500/10', 'text-sky-400'],
-    turns: ['border-slate-500', 'bg-slate-800', 'text-white'],
+    sectors: ['border-f1-cyan/60', 'bg-f1-cyan/15', 'text-f1-cyan'],
+    turns: ['border-ink/30', 'bg-ink/10', 'text-ink'],
   };
 
   document.querySelectorAll<HTMLElement>('[data-circuit-map]').forEach((container) => {
@@ -197,9 +195,9 @@ const hasSectors = Boolean(sectors);
         layer.classList.toggle('opacity-0', !isActive);
 
         (ACTIVE_STYLES[key] || []).forEach((cls) => btn.classList.toggle(cls, isActive));
-        btn.classList.toggle('text-slate-400', !isActive);
-        btn.classList.toggle('border-slate-800', !isActive);
-        btn.classList.toggle('bg-[#111621]', !isActive);
+        btn.classList.toggle('text-ink-muted', !isActive);
+        btn.classList.toggle('border-line', !isActive);
+        btn.classList.toggle('bg-muted', !isActive);
 
         if (legend) {
           legend.classList.toggle('flex', isActive);
@@ -207,7 +205,7 @@ const hasSectors = Boolean(sectors);
         }
 
         if (key === 'sectors' && baseTrack) {
-          baseTrack.setAttribute('stroke', isActive ? '#334155' : '#e2e8f0');
+          baseTrack.classList.toggle('opacity-20', isActive);
         }
       });
     });

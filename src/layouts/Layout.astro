@@ -1,25 +1,26 @@
 ---
-import '../styles/global.css';
+import "../styles/global.css";
 
-import { getRaceStatus, type RaceStatusBadge } from '../utils/raceStatus';
+import { getRaceStatus, type RaceStatusBadge } from "../utils/raceStatus";
+import ThemeToggle from "../components/ui/ThemeToggle.astro";
 
 interface Props {
   title?: string;
   raceDate?: string;
 }
 
-const { title = 'F1 Hub — Telemetry & Race Control', raceDate } = Astro.props;
+const { title = "F1 Hub — Telemetry & Race Control", raceDate } = Astro.props;
 const currentPath = Astro.url.pathname;
 
 const status: RaceStatusBadge = getRaceStatus(raceDate);
 
 const navLinks = [
-  { name: 'Campeonato', href: '/standings' },
-  { name: 'Campeonato de Constructores', href: '/constructors' },
-  { name: 'Equipos', href: '/teams' },
-  { name: 'Pilotos', href: '/drivers' },
-  { name: 'Circuitos', href: '/circuits/circuits' },
-  { name: 'Calendario', href: '/calendar' },
+  { name: "Campeonato", href: "/standings" },
+  { name: "Campeonato de Constructores", href: "/constructors" },
+  { name: "Equipos", href: "/teams" },
+  { name: "Pilotos", href: "/drivers" },
+  { name: "Circuitos", href: "/circuits/circuits" },
+  { name: "Calendario", href: "/calendar" },
 ];
 ---
 
@@ -28,29 +29,33 @@ const navLinks = [
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <link rel="icon" href="/favicon.ico?v=2" sizes="any" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@1,800;1,900&display=swap"
-      rel="stylesheet"
-    />
     <title>{title}</title>
+
+    <!-- Aplica el tema antes del primer render (evita FOUC) -->
+    <script is:inline>
+      (() => {
+        const stored = localStorage.getItem("f1hub-theme");
+        const prefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)",
+        ).matches;
+        const theme = stored ?? (prefersDark ? "dark" : "light");
+        document.documentElement.classList.toggle("dark", theme === "dark");
+      })();
+    </script>
   </head>
-  <body class="bg-[#0b0e14] text-slate-100 antialiased selection:bg-red-600 selection:text-white min-h-screen flex flex-col">
-    
+  <body class="bg-canvas text-ink antialiased selection:bg-f1-red selection:text-ink transition-colors duration-200">
     <!-- Top Navbar -->
-    <header class="h-16 border-b border-slate-800/80 bg-[#0b0e14]/90 backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
+    <header class="h-16 border-b border-line bg-muted backdrop-blur-md sticky top-0 z-50 px-4 lg:px-8 flex items-center justify-between">
       <div class="flex items-center gap-10">
         <a href="/" class="flex items-center gap-2.5 group">
           <span
             class="text-xl font-black italic tracking-tight leading-none flex items-baseline"
             style="font-family: 'Exo 2', sans-serif;"
           >
-            <span class="text-red-500">F1</span>
-            <span class="text-white ml-1">Hub</span>
+            <span class="text-f1-red">F1</span>
+            <span class="text-ink ml-1">Hub</span>
             <span class="w-1.5 h-1.5 rounded-full bg-sky-400 ml-0.5 inline-block"></span>
           </span>
         </a>
@@ -62,8 +67,10 @@ const navLinks = [
               <a
                 href={link.href}
                 class:list={[
-                  'text-sm font-medium transition-colors py-1 border-b-2',
-                  isActive ? 'text-white border-red-600' : 'text-slate-400 border-transparent hover:text-slate-100',
+                  "text-sm font-medium transition-colors py-1 border-b-2",
+                  isActive
+                    ? "text-ink border-red-600"
+                    : "text-ink-muted border-transparent hover:text-slate-100",
                 ]}
               >
                 {link.name}
@@ -74,12 +81,29 @@ const navLinks = [
       </div>
 
       <!-- Badge de Status Dinámico -->
-      <div class:list={['flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-mono', status.bgColor]}>
-        <span class="text-slate-400">Status</span>
-        <div class="flex items-center gap-1.5">
-          <span class:list={['w-2 h-2 rounded-full', status.dotColor, status.pulse && 'animate-ping']} />
-          <span class:list={['font-bold tracking-wider', status.textColor]}>{status.label}</span>
+      <div class="flex items-center gap-3">
+        <div
+          class:list={[
+            "flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-mono",
+            status.bgColor,
+          ]}
+        >
+          <span class="text-ink-muted">Status</span>
+          <div class="flex items-center gap-1.5">
+            <span
+              class:list={[
+                "w-2 h-2 rounded-full",
+                status.dotColor,
+                status.pulse && "animate-ping",
+              ]}
+            />
+            <span class:list={["font-bold tracking-wider", status.textColor]}>
+              {status.label}
+            </span>
+          </div>
         </div>
+
+        <ThemeToggle />
       </div>
     </header>
 
@@ -89,6 +113,5 @@ const navLinks = [
         <slot />
       </main>
     </div>
-
   </body>
 </html>
